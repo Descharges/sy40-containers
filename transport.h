@@ -1,7 +1,7 @@
 #ifndef CLASS_H
 #define CLASS_H
 
-
+#include <stdbool.h>
 #include "container.h"
 #include "train.h"
 
