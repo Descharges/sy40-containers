@@ -1,8 +1,14 @@
 #include "transport.h"
 #include "train.h"
 
-void transportFunc(transport t){
-  switch (t.type){
+//Mutex to handle the access to the docks
+pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t truckQueue = PTHREAD_COND_INITIALIZER;
+
+int nTrucks = 0;
+
+void trsFunc(transport* t){
+  switch (t->type){
     case 'b'://boat
       boat(t);
       break;
@@ -17,21 +23,21 @@ void transportFunc(transport t){
 
 
 //Connect the transports to the message queue and shared memory
-void boatArrival(transport t){}
-void trainArrival(transport t){
+void boatArrival(transport* t){}
+void trainArrival(transport* t){
   //Connect the train shared memory and message queue
-  
+
   //Update of the shared memory if needed
 
   //Give the content to the control tower/crane
 
 }
-void truckArrival(transport t){}
+void truckArrival(transport* t){}
 
 
 
-void boat(transport t){}
-void train(transport t){
+void boat(transport* t){}
+void train(transport* t){
 
   bool filled = false;
   bool gone = false;
@@ -48,8 +54,35 @@ void train(transport t){
     //Check if the train should move
 
   }
-  
+
 
 
 }
-void truck(transport t){}
+void truck(transport* t){
+  //Wait for signal that a case is available for him
+  pthread_mutex_lock(&truckMutex);
+  if (nTrucks < 10){
+    t->pos = 10-nTrucks;
+    nTrucks++;
+  }else{
+    printf("[TRUCK ID=%d]Waiting to enter docks...\n",t->id);
+    pthread_cond_wait(&truckQueue, &truckMutex);
+  }
+  pthread_mutex_unlock(&truckMutex);
+
+  printf("[TRUCK ID=%d]The truck entered the dock at position %d\n",t->id,t->pos);
+
+  sleep(3);
+
+  printf("[TRUCK ID=%d]The truck is leaving...\n",t->id,t->pos);
+
+  pthread_mutex_lock(&truckMutex);
+  nTrucks--;
+  pthread_cond_signal(&truckQueue);
+
+  pthread_mutex_unlock(&truckMutex);
+  free(t);
+  pthread_exit(NULL);
+
+
+}

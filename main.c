@@ -1,6 +1,8 @@
 #include "main.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
 
 void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
@@ -21,6 +23,21 @@ void genTerrain(){
 }
 
 void genTransport(){
-  printf("Generating transport methods...");
-  while(1){}
+  printf("Generating transport methods...\n");
+
+
+  pthread_t thread[20];
+
+  for(int i=0;i<20;i++){
+    transport* t = malloc(sizeof(transport));
+    (*t).type = 'T';
+    (*t).id = i;
+    pthread_create(thread+i,0,(void *)trsFunc, t);
+  }
+
+  for(int i=0;i<20;i++){
+    pthread_join(thread[i],NULL);
+  }
+
+
 }

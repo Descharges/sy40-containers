@@ -2,6 +2,10 @@
 #define CLASS_H
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "container.h"
 #include "train.h"
 
@@ -14,10 +18,10 @@ typedef struct transport{
   int pos;
 }transport;
 
-void trsFunc(transport t);//funtion to associate one function to each type
-void boat(transport t);//main function for the boat
-void train(transport t);//Idem
-void truck(transport t);//Idem
+void trsFunc(transport* t);//funtion to associate one function to each type
+void boat(transport* t);//main function for the boat
+void train(transport* t);//Idem
+void truck(transport* t);//Idem
 
 
 
