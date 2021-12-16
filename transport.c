@@ -99,7 +99,7 @@ void truck(transport* t){
   sleep(1); //Here goes the dicision to go or not
 
   //I should secure all thoses prints but :
-  //1-Print are read only
+  //1-Prints are read only
   //2-It's only debug and won't stay
   //3-I'm lazy
 
