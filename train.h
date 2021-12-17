@@ -1,6 +1,6 @@
 #ifndef CLASS_H
 #define CLASS_H
 
-//blah blah blah
+//On en aura besoin? 
 
 #endif
