@@ -1,4 +1,5 @@
 #include "main.h"
+#include "transportGeneration.h";
 
 #include <stdio.h>
 
@@ -22,5 +23,6 @@ void genTerrain(){
 
 void genTransport(){
   printf("Generating transport methods...");
+  generateTrains();
   while(1){}
 }

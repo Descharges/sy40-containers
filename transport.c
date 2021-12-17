@@ -16,9 +16,14 @@ void transportFunc(transport t){
 }
 
 
-//Connect the transports to the message queue and shared memory
+
 void boatArrival(transport t){}
+
 void trainArrival(transport t){
+
+
+  //Place the train on the right position on the dock
+
   //Connect the train shared memory and message queue
   
   //Update of the shared memory if needed
@@ -31,11 +36,16 @@ void truckArrival(transport t){}
 
 
 void boat(transport t){}
-void train(transport t){
+void *train(void *t){
 
   bool filled = false;
   bool gone = false;
-  trainArrival(t);
+
+  transport train = *((transport*)(t));
+
+  printf("Train %d is here\n", train.id);
+
+  trainArrival(train);
 
 
   while( ! gone){
