@@ -21,12 +21,12 @@ typedef struct transport{
 void transportFunc(transport *t);//funtion to associate one function to each type
 
 //Connect the transports to the message queue and shared memory
-void boatArrival(transport t);
-void trainArrival(transport t);
-void truckArrival(transport t);
+void boatArrival(transport *t);
+void trainArrival(transport *t);
+void truckArrival(transport *t);
 
 void boat(transport* t);//main function for the boat
-void train(void* t);//Idem
+void train(transport* t);//Idem
 void truck(transport* t);//Idem
 
 
