@@ -41,8 +41,11 @@ void truckArrival(transport* t){}
 
 
 
-void boat(transport t){}
-void *train(void *t){
+
+void boat(transport *t){}
+
+
+void train(transport *t){
 
 
 
@@ -53,7 +56,7 @@ void *train(void *t){
 
   printf("Train %d is here\n", train.id);
 
-  trainArrival(train);
+  trainArrival(&train);
 
 
   while( ! gone){
@@ -70,6 +73,9 @@ void *train(void *t){
 
 
 }
+
+
+
 void truck(transport* t){
   //Wait for signal that a case is available for him
   pthread_mutex_lock(&truckMutex);

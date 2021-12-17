@@ -15,7 +15,7 @@ void generateTrains(){
     train[1].id = 2;
 
     for(int  i = 0 ; i<2 ; i++){//Finite loop for test purpose
-        if (pthread_create(&thread_id[i], 0, trainArrival, &train[i]) != 0)
+        if (pthread_create(&thread_id[i], 0,(void *) trainArrival, &train[i]) != 0)
 	        perror("Erreur Creation thread");
 	      
     }

@@ -36,7 +36,7 @@ printf("Generating transport methods...\n");
     transport* t = malloc(sizeof(transport));
     (*t).type = 'T';
     (*t).id = i;
-    pthread_create(thread+i,0,(void *)trsFunc, t);
+    pthread_create(thread+i,0,(void *)transportFunc, t);
   }
 
   for(int i=0;i<20;i++){
