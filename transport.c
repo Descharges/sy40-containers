@@ -7,7 +7,7 @@ void transportFunc(transport t){
       boat(t);
       break;
     case 't'://train
-      train(t);
+      train(&t);
       break;
     case 'T'://Truck (maybe find a better letter ? idk)
       truck(t);
