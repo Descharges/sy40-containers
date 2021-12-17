@@ -1,5 +1,5 @@
 #include "main.h"
-#include "transportGeneration.h";
+#include "transportGeneration.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,10 +24,11 @@ void genTerrain(){
 }
 
 void genTransport(){
-  printf("Generating transport methods...");
+  printf("Generating transport methods...\n");
+  
   generateTrains();
+
   while(1){}
-printf("Generating transport methods...\n");
 
 
   pthread_t thread[20];

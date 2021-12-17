@@ -5,18 +5,25 @@
 
 
 void generateTrains(){
-    int thread_id[2];
+    pthread_t thread[2];
 
     transport train[2];
-    train[0].type = 't';
-    train[0].id = 1;
 
-    train[1].type = 't';
-    train[1].id = 2;
-
+    
+    //Train thread creation
     for(int  i = 0 ; i<2 ; i++){//Finite loop for test purpose
-        if (pthread_create(&thread_id[i], 0,(void *) trainArrival, &train[i]) != 0)
+        train[i].type = 't';
+        train[i].id = i;
+        
+        if (pthread_create(thread+i, 0,(void *) trainArrival, &train[i]) != 0)
 	        perror("Erreur Creation thread");
-	      
+
+        
+        
     }
+
+    //Train thread destruction 
+    for(int i=0;i<20;i++){
+            pthread_join(thread[i],NULL);
+        }
 }
