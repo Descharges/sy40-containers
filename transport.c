@@ -1,5 +1,4 @@
 #include "transport.h"
-#include "train.h"
 
 //Mutex to handle the access to the docks
 pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER, posMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -30,11 +29,15 @@ void trsFunc(transport* t){
 
 //Connect the transports to the message queue and shared memory
 void boatArrival(transport* t){}
-void trainArrival(transport* t){  //Connect the train shared memory and message queue
+void trainArrival(transport* t){ 
+  printf("A train just arrived\n");
+   //Connect the train shared memory and message queue
 
   //Update of the shared memory if needed
 
   //Give the content to the control tower/crane
+
+  train(t);
 
 }
 void truckArrival(transport* t){}
@@ -56,7 +59,6 @@ void train(transport *t){
 
   printf("Train %d is here\n", train.id);
 
-  trainArrival(&train);
 
 
   while( ! gone){
