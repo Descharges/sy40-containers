@@ -25,11 +25,11 @@ void trsFunc(transport* t){
 
 
 
-  //Place the train on the right position on the dock
+//Place the train on the right position on the dock
 
-//Connect the transports to the message queue and shared memory
+//Connect the transports to the message queue and shared memory? Or should these function be removed?
 void boatArrival(transport* t){}
-void trainArrival(transport* t){ 
+void trainArrival(trainAndCommunication* t){
   printf("A train just arrived\n");
    //Connect the train shared memory and message queue
 
@@ -48,27 +48,58 @@ void truckArrival(transport* t){}
 void boat(transport *t){}
 
 
-void train(transport *t){
+void train(trainAndCommunication *t){
 
 
 
-  bool filled = false;
-  bool gone = false;
+  bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
+  bool g2g = false;
+  bool isOnTopPosition = false;
 
-  transport train = *((transport*)(t));
+  //Get the struct parameter of the function
+  trainAndCommunication trainAndCom = *((trainAndCommunication*)(t));
+  transport train = trainAndCom.train;
+    
 
-  printf("Train %d is here\n", train.id);
+  //For TEST purpose
+  if(train.id == 0){
+      printf("Train %d is here,  top position occupied : %s\n", train.id, *(trainAndCom.topPositionOccupied) ? "true" : "false");
+      isOnTopPosition = true;
+      *(trainAndCom.topPositionOccupied) = true;
+  }else{
+    printf("Train %d is here, top position occupied: %s\n", train.id, *(trainAndCom.topPositionOccupied) ? "true" : "false");
+    isOnTopPosition = false;
+  }
 
 
 
-  while( ! gone){
-    //The train wake up, we unlock the monitor
 
-    //Get the content of the shared memory and message queue
+  while( ! g2g){
+  //===The train wake up, we unlock the monitor
 
-    //Remove or add container
+  //===Get the content of the shared memory and message queue
 
-    //Check if the train should move
+  //===Remove or add container
+
+    
+  //===Check if the train should move
+
+    if(*(trainAndCom.topPositionOccupied) == false){
+      //move to the top position
+      isOnTopPosition = true;
+      *(trainAndCom.topPositionOccupied) = true;
+
+    }
+
+    if(filledWithGoodDestination && isOnTopPosition){
+      //Leave
+      g2g==true;
+      *(trainAndCom.topPositionOccupied) = false;
+       printf("Train %d is leaving\n", train.id);
+      break;
+     
+    }
+    
 
   }
 
