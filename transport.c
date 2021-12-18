@@ -1,6 +1,10 @@
 #include "transport.h"
+#include <pthread.h>
 
-//Mutex to handle the access to the docks
+//===Mutex to handle the access to the docks
+//Train
+pthread_mutex_t trainMutex = PTHREAD_MUTEX_INITIALIZER;
+//Truck
 pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER, posMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t truckQueue = PTHREAD_COND_INITIALIZER, truckAdv= PTHREAD_COND_INITIALIZER;
 pthread_mutex_t advMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -25,13 +29,13 @@ void trsFunc(transport* t){
 
 
 
-  //Place the train on the right position on the dock
+//Place the train on the right position on the dock
 
-//Connect the transports to the message queue and shared memory
+//Connect the transports to the message queue and shared memory? Or should these function be removed?
 void boatArrival(transport* t){}
-void trainArrival(transport* t){ 
-  printf("A train just arrived\n");
-   //Connect the train shared memory and message queue
+void trainArrival(trainAndCommunication* t){
+  printf("Train %d is arrived\n", t->train.id);
+  //Connect the train shared memory and message queue
 
   //Update of the shared memory if needed
 
@@ -48,27 +52,63 @@ void truckArrival(transport* t){}
 void boat(transport *t){}
 
 
-void train(transport *t){
+void train(trainAndCommunication *t){
+
+  bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
+  bool leave = false;
+  bool isOnTopPosition = false;
+
+  //Get the struct parameter of the function
+  trainAndCommunication trainAndCom = *((trainAndCommunication*)(t));
+  transport train = trainAndCom.train;
+    
+
+  //For TEST purpose
+  if(train.id == 0){
+      printf("Train %d top position occupied : %s\n", train.id, *(trainAndCom.topPositionOccupied) ? "true" : "false");
+      
+      isOnTopPosition = true;
+      pthread_mutex_lock(&trainMutex);
+        *(trainAndCom.topPositionOccupied) = true;
+      pthread_mutex_unlock(&trainMutex);
+  }else{
+    printf("Train %d top position occupied: %s\n", train.id, *(trainAndCom.topPositionOccupied) ? "true" : "false");
+    
+    isOnTopPosition = false;
+  }
 
 
 
-  bool filled = false;
-  bool gone = false;
 
-  transport train = *((transport*)(t));
+  while( ! leave){
+  //===The train wake up, we unlock the monitor
 
-  printf("Train %d is here\n", train.id);
+  //===Get the content of the message queue
 
+  //===Remove or add container
 
+    
+  //===Check if the train should move
+    pthread_mutex_lock(&trainMutex);
+      if(*(trainAndCom.topPositionOccupied) == false){
+        //move to the top position
+        isOnTopPosition = true;
+        *(trainAndCom.topPositionOccupied) = true;
 
-  while( ! gone){
-    //The train wake up, we unlock the monitor
+      }
+    pthread_mutex_unlock(&trainMutex);
 
-    //Get the content of the shared memory and message queue
+    if(filledWithGoodDestination && isOnTopPosition){
+      //Leave
+      leave==true;
+      pthread_mutex_lock(&trainMutex);
+        *(trainAndCom.topPositionOccupied) = false;
+      pthread_mutex_unlock(&trainMutex);
 
-    //Remove or add container
-
-    //Check if the train should move
+      printf("Train %d is leaving\n", train.id);
+     break;
+    }
+    
 
   }
 
