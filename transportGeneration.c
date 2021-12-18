@@ -12,7 +12,7 @@ void generateTrains(){
 
     trainAndCommunication trainAndCom[2];
 
-    //Create the shared memory usefull for the train to check if they can move forward
+    //Create the shared memory useful to check if a train can move forward
     int shmid;
     bool *topPositionOccupied;
     shmid = shmget(IPC_PRIVATE, sizeof(int), 0666);
@@ -21,7 +21,7 @@ void generateTrains(){
     printf("False :%s\n", *topPositionOccupied? "tr":"false" );
 
     //Train thread creation
-    for(int  i = 0 ; i<2 ; i++){//Finite loop for test purpose
+    for(int  i = 0 ; i<2 ; i++){//Finite loop for TEST purpose
         trainAndCom[i].train.type = 't';
         trainAndCom[i].train.id = i;
         trainAndCom[i].topPositionOccupied = topPositionOccupied;
