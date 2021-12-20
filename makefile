@@ -1,6 +1,6 @@
 OBJS	= main.o transport.o transportGeneration.o
 SOURCE	= main.c transport.c transportGeneration.c
-HEADER	= main.h transport.h transportGeneration.h container.h
+HEADER	= main.h transport.h transportGeneration.h container.h docks.h
 OUT	= sy40
 CC	 = gcc
 FLAGS	 = -g -c -Wall

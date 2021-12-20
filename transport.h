@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "container.h"
+#include "docks.h"
 
 //Structure to define transportation method
 typedef struct transport{
@@ -33,8 +34,3 @@ void truckArrival(transport *t);
 void boat(transport* t);//main function for the boat
 void train(trainAndCommunication* t);//Idem
 void truck(transport* t);//Idem
-
-
-
-
-

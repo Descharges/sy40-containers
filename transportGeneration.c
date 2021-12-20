@@ -7,6 +7,14 @@
 #include <sys/ipc.h>
 
 
+//beacoup de nettoyage a faire ici
+
+void crane(){
+
+}
+
+
+
 void generateTrains(){
     pthread_t thread[2];
 
@@ -25,15 +33,15 @@ void generateTrains(){
         trainAndCom[i].train.type = 't';
         trainAndCom[i].train.id = i;
         trainAndCom[i].topPositionOccupied = topPositionOccupied;
-        
+
         if (pthread_create(thread+i, 0,(void *) trainArrival, &trainAndCom[i]) != 0)
 	        perror("Erreur Creation thread");
 
-        
-        
+
+
     }
 
-    //Train thread destruction 
+    //Train thread destruction
     for(int i=0;i<2;i++){
             pthread_join(thread[i],NULL);
         }
