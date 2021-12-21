@@ -13,6 +13,7 @@ void genTerrain(); //Not sur if usefull but might come handy
 
 void main(){
   //create the shared memory struct
+  Docks *docks;
 
   genCrane();
   genTerrain();
@@ -30,12 +31,12 @@ void genTerrain(){
 void genTransport(Docks* docks){
   printf("Generating transport methods...\n");
 
-  //generateTrains();
+  generateTrains();
 
-  //while(1){}
+  
 
-
-  pthread_t thread[20];
+  //Generate trucks
+  /*pthread_t thread[20];
 
   for(int i=0;i<20;i++){
     transport* t = malloc(sizeof(transport));
@@ -47,7 +48,7 @@ void genTransport(Docks* docks){
 
   for(int i=0;i<20;i++){
     pthread_join(thread[i],NULL);
-  }
+  }*/
 
 
 }

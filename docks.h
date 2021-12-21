@@ -9,19 +9,27 @@
 #define BOAT 3
 #define FULL 4
 
-typedef struct Dtrains{
-  int cont[10];
-  int trs[2];
-}Dtrains;
+#define NB_OF_TRUCKS 10
+#define NB_OF_TRAINS 2
+#define NB_OF_BOATS 2
+
+#define NB_CONTAINER_TRUCK 10
+#define NB_CONTAINER_TRAIN 10
+#define NB_CONTAINER_BOAT 6
 
 typedef struct Dtrucks{
-  int cont[10];
-  int trs[10];
+  int cont[NB_CONTAINER_TRUCK];
+  int trs[NB_OF_TRUCKS];
 }Dtrucks;
 
+typedef struct Dtrains{
+  int cont[NB_CONTAINER_TRAIN];
+  int trs[NB_OF_TRAINS];
+}Dtrains;
+
 typedef struct Dboat{
-  int cont[6];
-  int trs[2];
+  int cont[NB_CONTAINER_BOAT];
+  int trs[NB_OF_BOATS];
 }Dboat;
 
 typedef struct Docks{
