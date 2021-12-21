@@ -36,7 +36,7 @@ void genTransport(Docks* docks){
   
 
   //Generate trucks
-  /*pthread_t thread[20];
+  pthread_t thread[20];
 
   for(int i=0;i<20;i++){
     transport* t = malloc(sizeof(transport));
@@ -48,7 +48,7 @@ void genTransport(Docks* docks){
 
   for(int i=0;i<20;i++){
     pthread_join(thread[i],NULL);
-  }*/
+  }
 
 
 }
