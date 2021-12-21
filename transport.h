@@ -16,15 +16,17 @@ typedef struct transport{
   char* dest;
   container* contArray;
   int pos;
+  Docks *shmem;
 }transport;
 
 
 typedef struct trainAndCommunication{
   transport train;
   bool *topPositionOccupied;//Shared memory
+  Dtrains *sharedDock;
 }trainAndCommunication;
 
-void transportFunc(transport *t);//funtion to associate one function to each type
+void transportFunc(transport *t);//function to associate one function to each type
 
 //Connect the transports to the message queue and shared memory
 void boatArrival(transport *t);
@@ -32,5 +34,5 @@ void trainArrival(trainAndCommunication *t);
 void truckArrival(transport *t);
 
 void boat(transport* t);//main function for the boat
-void train(trainAndCommunication* t);//Idem
+void train(trainAndCommunication *t);//Idem
 void truck(transport* t);//Idem

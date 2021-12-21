@@ -7,7 +7,10 @@
 #include <sys/ipc.h>
 
 
-//beacoup de nettoyage a faire ici
+#define TOTAL_NUMBER_OF_TRAINS 4//For TEST purpose, it should be unlimited
+
+//beaucoup de nettoyage a faire ici
+//oui
 
 void crane(){
 
@@ -16,33 +19,42 @@ void crane(){
 
 
 void generateTrains(){
-    pthread_t thread[2];
+    pthread_t thread[TOTAL_NUMBER_OF_TRAINS];
 
-    trainAndCommunication trainAndCom[2];
+    trainAndCommunication trainAndCom[TOTAL_NUMBER_OF_TRAINS];
 
     //Create the shared memory useful to check if a train can move forward
     int shmid;
     bool *topPositionOccupied;
     shmid = shmget(IPC_PRIVATE, sizeof(int), 0666);
     topPositionOccupied= (bool *)shmat(shmid, NULL, 0);
-    *topPositionOccupied = false;	//initialisation � 0 du compteur
+    *topPositionOccupied = false;
     printf("False :%s\n", *topPositionOccupied? "tr":"false" );
 
+
+    //Create the shared memory of the train dock
+    int shmid2;
+    Dtrains *trainSharedDock;
+    shmid2 = shmget(IPC_PRIVATE, sizeof(int), 0666);
+    trainSharedDock= (Dtrains *)shmat(shmid, NULL, 0);
+    trainSharedDock->trs[0] = -1;
+    trainSharedDock->trs[1] = -1;
+    for(int i = 0 ; i<NB_OF_TRAINS ; i++)
+        trainSharedDock->cont[i] = -1;
+
+        
     //Train thread creation
-    for(int  i = 0 ; i<2 ; i++){//Finite loop for TEST purpose
+    for(int  i = 0 ; i<TOTAL_NUMBER_OF_TRAINS ; i++){//Finite loop for TEST purpose
         trainAndCom[i].train.type = 't';
         trainAndCom[i].train.id = i;
         trainAndCom[i].topPositionOccupied = topPositionOccupied;
-
-        if (pthread_create(thread+i, 0,(void *) trainArrival, &trainAndCom[i]) != 0)
+        trainAndCom[i].sharedDock = trainSharedDock;
+    if (pthread_create(thread+i, 0,(void *) trainArrival, &trainAndCom[i]) != 0)
 	        perror("Erreur Creation thread");
-
-
-
     }
 
     //Train thread destruction
-    for(int i=0;i<2;i++){
+    for(int i=0;i<TOTAL_NUMBER_OF_TRAINS;i++){
             pthread_join(thread[i],NULL);
         }
 }
