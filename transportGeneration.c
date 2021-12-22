@@ -25,17 +25,11 @@ void generateTrains(){
 
     //Create the shared memory useful to check if a train can move forward
     int shmid;
-    bool *topPositionOccupied;
-    shmid = shmget(IPC_PRIVATE, sizeof(int), 0666);
-    topPositionOccupied= (bool *)shmat(shmid, NULL, 0);
-    *topPositionOccupied = false;
-    printf("False :%s\n", *topPositionOccupied? "tr":"false" );
-
 
     //Create the shared memory of the train dock
     int shmid2;
     Dtrains *trainSharedDock;
-    shmid2 = shmget(IPC_PRIVATE, sizeof(int), 0666);
+    shmid = shmget(IPC_PRIVATE, sizeof(int), 0666);
     trainSharedDock= (Dtrains *)shmat(shmid, NULL, 0);
     trainSharedDock->trs[0] = -1;
     trainSharedDock->trs[1] = -1;
@@ -47,9 +41,8 @@ void generateTrains(){
     for(int  i = 0 ; i<TOTAL_NUMBER_OF_TRAINS ; i++){//Finite loop for TEST purpose
         trainAndCom[i].train.type = 't';
         trainAndCom[i].train.id = i;
-        trainAndCom[i].topPositionOccupied = topPositionOccupied;
         trainAndCom[i].sharedDock = trainSharedDock;
-    if (pthread_create(thread+i, 0,(void *) trainArrival, &trainAndCom[i]) != 0)
+    if (pthread_create(thread+i, 0,(void *) train, &trainAndCom[i]) != 0)
 	        perror("Erreur Creation thread");
     }
 

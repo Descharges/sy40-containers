@@ -22,7 +22,6 @@ typedef struct transport{
 
 typedef struct trainAndCommunication{
   transport train;
-  bool *topPositionOccupied;//Shared memory
   Dtrains *sharedDock;
 }trainAndCommunication;
 
