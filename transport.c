@@ -25,27 +25,10 @@ void transportFunc(transport* t){
       train(t);
       break;
     case 'T'://Truck (maybe find a better letter ? idk)
-      //truck(t);
+      truck(t);
       break;
   }
 }
-
-
-
-//Connect the transports to the message queue and shared memory? Or should these function be removed?
-void boatArrival(transport* t){}
-void trainArrival(trainAndCommunication* t){
-  printf("Train %d is arrived\n", t->train.id);
-  //Connect the train shared memory and message queue
-
-  //Update of the shared memory if needed
-
-  //Give the content to the control tower/crane
-
-  train(t);
-
-}
-void truckArrival(transport* t){}
 
 
 
@@ -54,6 +37,8 @@ void boat(transport *t){}
 
 
 void train(trainAndCommunication *t){
+
+  printf("Train %d is arrived\n", t->train.id);
 
   bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
   bool isOnTopPosition = false;
