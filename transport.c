@@ -1,17 +1,20 @@
 #include "transport.h"
 #include <pthread.h>
+#include <signal.h>
 
 //===Mutex to handle the access to the docks
 //Train
 pthread_mutex_t trainMutex = PTHREAD_MUTEX_INITIALIZER;
-
 pthread_cond_t trainDockQueue = PTHREAD_COND_INITIALIZER,//Contain only 2 trains
 trainWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
 //Truck
 pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER, posMutex = PTHREAD_MUTEX_INITIALIZER;
-
 pthread_cond_t truckQueue = PTHREAD_COND_INITIALIZER, truckAdv= PTHREAD_COND_INITIALIZER;
 pthread_mutex_t advMutex = PTHREAD_MUTEX_INITIALIZER;
+//Boat
+pthread_mutex_t boatMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t boatWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
+
 char pos[10];
 
 int nTrucks = 0;
@@ -25,50 +28,125 @@ void transportFunc(transport* t){
       train(t);
       break;
     case 'T'://Truck (maybe find a better letter ? idk)
-      truck(t);
+      //truck(t);
       break;
   }
 }
 
+void sig_handler(int signo){
+  printf("Signal handler triggered\n");
+}
+
+void boat(transport *t){
+ 
+  bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
+
+  transport boat = *((transport*)(t));
+
+  struct sigaction unpauseSigaction;
+  unpauseSigaction.sa_handler = sig_handler;
+  sigemptyset (&unpauseSigaction.sa_mask);
+  unpauseSigaction.sa_flags = 0;
+  sigaction(SIGINT, &unpauseSigaction, NULL);
 
 
 
-void boat(transport *t){}
+  printf("Boat %d arrive\n", boat.id);
+   
+  //If there is no room available on the docks, come in the waiting queue
+  pthread_mutex_lock(&boatMutex);
+    if(boat.shmem.boatSharedDock->trs[0]>0 && boat.shmem.boatSharedDock->trs[1]>0){
+      pthread_cond_wait(&boatWaitingQueue, &boatMutex);
+    }
+  pthread_mutex_unlock(&boatMutex);
+
+  sleep(1);
+  printf("Boat %d arrive on the dock\n", boat.id);
+  
+
+  //==Give the boat its initial position
+  pthread_mutex_lock(&boatMutex);
+    for(int i = 0 ; i<NB_OF_BOATS ; i++){
+      if(boat.shmem.boatSharedDock->trs[i]<0){
+        boat.shmem.boatSharedDock->trs[i] = boat.id;
+        break;
+      }
+    }
+  pthread_mutex_unlock(&boatMutex);
 
 
-void train(trainAndCommunication *t){
+  //For TEST purpose
+  if(boat.id == 0){
+  }else if(boat.id == 3){
+  }
 
-  printf("Train %d is arrived\n", t->train.id);
+
+  printf("Boat occupying top position : %d ; Boat occupying mid position : %d\n", boat.shmem.boatSharedDock->trs[0], boat.shmem.boatSharedDock->trs[1]);
+
+    if(filledWithGoodDestination){
+
+      //Leave (= destruction) TO DO
+      printf("Boat %d leave\n", boat.id);
+
+      //The boat is removed from its place on the dock
+      pthread_mutex_lock(&boatMutex);
+        if(boat.shmem.boatSharedDock->trs[0] == boat.id){
+          boat.shmem.boatSharedDock->trs[0] = -1;
+        }else if(boat.shmem.boatSharedDock->trs[1] == boat.id){
+          boat.shmem.boatSharedDock->trs[1] = -1;
+        }else{
+          printf("Au secours ! un bateau veux partir mais n'est même pas sur les quais !!!");
+        }
+      pthread_mutex_unlock(&boatMutex);
+
+      //Give signal for the next boat in the waiting queue to come
+      pthread_mutex_lock(&boatMutex);
+        pthread_cond_signal(&boatWaitingQueue);
+      pthread_mutex_unlock(&boatMutex);
+    }
+
+}
+
+
+
+void train(transport *t){
+
+  printf("Train %d arrive\n", t->id);
 
   bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
   bool isOnTopPosition = false;
+  bool goInWaitingQueue = true;
 
-  //Get the struct parameter of the function
-  trainAndCommunication trainAndCom = *((trainAndCommunication*)(t));
-  transport train = trainAndCom.train;
+  transport train = *((transport*)(t));
  
   //If there is no room available on the docks, come in the waiting queue
   pthread_mutex_lock(&trainMutex);
-    if(trainAndCom.sharedDock->trs[0]>0 && trainAndCom.sharedDock->trs[1]>0){
+    //A retravailler pour la scalabilité
+    /*for(int i = 0 ; i<NB_OF_TRAINS ; i++){
+      if(train.shmem.trainSharedDock->trs[i]<0){
+        goInWaitingQueue = false;
+        break;
+      }
+    }
+    if(goInWaitingQueue){
+      pthread_cond_wait(&trainWaitingQueue, &trainMutex);
+    }*/
+    if(train.shmem.trainSharedDock->trs[0]>0 && train.shmem.trainSharedDock->trs[1]>0){
       pthread_cond_wait(&trainWaitingQueue, &trainMutex);
     }
   pthread_mutex_unlock(&trainMutex);
 
-
+  printf("COUCOU");
   //==Give the train its initial position
   pthread_mutex_lock(&trainMutex);
-    //If there is no train on top position
-    if(trainAndCom.sharedDock->trs[0]<0)
-    {
-        isOnTopPosition = true;
-        trainAndCom.sharedDock->trs[0] = train.id;
-        
-    }//If there is no train on mid positions
-    else if(trainAndCom.sharedDock->trs[1]<0){
-      //Take the mid position
-      trainAndCom.sharedDock->trs[1] = train.id;
-      
-    }
+    for(int i = 0 ; i<NB_OF_TRAINS ; i++){
+        if(train.shmem.trainSharedDock->trs[i]<0){
+          train.shmem.trainSharedDock->trs[i] = train.id;
+          if(i==0)
+            isOnTopPosition = true;
+          break;
+        }
+      }
   pthread_mutex_unlock(&trainMutex);
 
   //For TEST purpose
@@ -76,7 +154,6 @@ void train(trainAndCommunication *t){
   }else if(train.id == 3){
     pthread_cond_signal(&trainDockQueue);
   }
-
 
   //===The train wait
   pthread_mutex_lock(&trainMutex);
@@ -87,23 +164,23 @@ void train(trainAndCommunication *t){
   //===Check if the train should move
     pthread_mutex_lock(&trainMutex);
       //If there is no train on top position
-      if(trainAndCom.sharedDock->trs[0] < 0){
+      if(train.shmem.trainSharedDock->trs[0] < 0){
         //move to the top position
         isOnTopPosition = true;
-        trainAndCom.sharedDock->trs[0] = train.id;
-        trainAndCom.sharedDock->trs[1] = -1;
+        train.shmem.trainSharedDock->trs[0] = train.id;
+        train.shmem.trainSharedDock->trs[1] = -1;
         printf("Train %d take the top position\n", train.id);
       }
     pthread_mutex_unlock(&trainMutex);
 
-    printf("Train occupying top position : %d ; Train occupying mid position : %d\n", trainAndCom.sharedDock->trs[0], trainAndCom.sharedDock->trs[1]);
+    printf("Train occupying top position : %d ; Train occupying mid position : %d\n", train.shmem.trainSharedDock->trs[0], train.shmem.trainSharedDock->trs[1]);
 
     if(filledWithGoodDestination && isOnTopPosition){
       //Leave (= destruction) TO DO
-      printf("Train %d is leaving\n", train.id);
+      printf("Train %d leave\n", train.id);
       //Give signal to the next train on the dock to come
       pthread_mutex_lock(&trainMutex);
-        trainAndCom.sharedDock->trs[0] = -1;
+        train.shmem.trainSharedDock->trs[0] = -1;
         pthread_cond_signal(&trainDockQueue);
       pthread_mutex_unlock(&trainMutex);
       //Give signal for the next train in the waiting queue to come
