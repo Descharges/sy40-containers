@@ -27,13 +27,14 @@ typedef struct Dtrains{
   int trs[NB_OF_TRAINS];
 }Dtrains;
 
-typedef struct Dboat{
+typedef struct Dboats{
   int cont[NB_CONTAINER_BOAT];
   int trs[NB_OF_BOATS];
-}Dboat;
+}Dboats;
 
 typedef struct Docks{
-  Dtrains trains;
-  Dtrucks trucks;
-  Dboat boat;
+  Dtrains *trainSharedDock;
+  Dtrucks trucksSharedDock;
+  Dboats *boatSharedDock;
 }Docks;
+
