@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
+#include <stdlib.h>
 
 #define TRAIN 1
 #define TRUCK 2
@@ -33,8 +35,16 @@ typedef struct Dboats{
 }Dboats;
 
 typedef struct Docks{
-  Dtrains *trainSharedDock;
+  Dtrains trainSharedDock;
   Dtrucks trucksSharedDock;
-  Dboats *boatSharedDock;
+  Dboats boatSharedDock;
 }Docks;
 
+void shmemInit();
+
+int getShmid();
+
+void printShmem(int shmid);
+
+void lock(int arg);
+void unlock(int arg);

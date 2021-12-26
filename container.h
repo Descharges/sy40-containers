@@ -3,5 +3,5 @@
 
 typedef struct container{
   int id;
-  char* dest;
+  char dest;
 }container;

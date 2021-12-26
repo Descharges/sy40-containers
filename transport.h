@@ -13,10 +13,10 @@
 typedef struct transport{
   char type;
   int id;
-  char* dest;
+  char dest;
   container* contArray;
   int pos;
-  Docks shmem;//jsp pk mais quand c'est un pointeur impossible d'accéder à trainToGenerate->shmem->trainSharedDock
+  int shmid;
 }transport;
 
 

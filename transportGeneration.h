@@ -1,3 +1,4 @@
 
 
 void generateTrains();
+void generateBoats();
