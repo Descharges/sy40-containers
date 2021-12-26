@@ -43,7 +43,7 @@ void genTerrain(){
 void genTransport(){
   printf("Generating transport methods...\n");
 
-  generateBoats();
+  generateTrains();
 
 
 
