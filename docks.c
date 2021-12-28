@@ -1,5 +1,6 @@
 #include "docks.h"
 
+
 pthread_mutex_t trainMutexShm = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t truckMutexShm = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t boatMutexShm = PTHREAD_MUTEX_INITIALIZER;
@@ -27,7 +28,7 @@ void printShmem(int shmid){
 
   printf("Trucks container:\n");
   for (int i=0; i<NB_CONTAINER_TRUCK; i++){
-    printf("[%d]",shmem->trucksSharedDock.cont[i]);
+    printf("[%d]",shmem->trucksSharedDock.cont[i].id);
   }
   printf("\n");
 
@@ -39,7 +40,7 @@ void printShmem(int shmid){
 
   printf("Boat container:\n");
   for (int i=0; i<NB_CONTAINER_BOAT; i++){
-    printf("[%d]",shmem->boatSharedDock.cont[i]);
+    printf("[%d]",shmem->boatSharedDock.cont[i].id);
   }
   printf("\n");
 
@@ -51,7 +52,7 @@ void printShmem(int shmid){
 
   printf("Train container:\n");
   for (int i=0; i<NB_CONTAINER_TRAIN; i++){
-    printf("[%d]",shmem->trainSharedDock.cont[i]);
+    printf("[%d]",shmem->trainSharedDock.cont[i].id);
   }
   printf("\n");
 
