@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
+#include <signal.h>
 
 
 #define TOTAL_NUMBER_OF_BOATS 4//For TEST purpose, it should be unlimited
@@ -16,8 +17,7 @@ void crane(){
 
 }
 
-
-//For TEST purpose, should probably be with the truck and boat generation
+//For TEST purpose
 void generateTrains(){
 
     pthread_t thread[20];
@@ -60,12 +60,13 @@ void generateTrains(){
 }
 
 
-//For TEST purpose, should probably be with the truck and train generation
+//For TEST purpose
 void generateBoats(){
 
     pthread_t thread[TOTAL_NUMBER_OF_BOATS];
 
     //Train thread creation
+
     for(int  i = 0 ; i<TOTAL_NUMBER_OF_BOATS ; i++){//Finite loop for TEST purpose
         
         transport* t = malloc(sizeof(transport));

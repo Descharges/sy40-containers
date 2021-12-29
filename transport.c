@@ -2,6 +2,8 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
+#include <time.h>
+
 
 //===Mutex to handle the access to the docks
 //Train
@@ -45,14 +47,14 @@ void transportFunc(transport* t){
   }
 }
 
-void sig_handler(int signo){
-  printf("Signal handler triggered\n");
-  exit(0);
-}
+void sigHandler(int signo){
+  printf("=========Signal handler triggered\n");
+  }
 
 void boat(transport *t){
 
   //TODO: remettre le booléen
+
 
 
   //Set the interupt action
@@ -125,10 +127,13 @@ void boat(transport *t){
 
   printf("[BOAT %d]Leaving the docks with %d,%d,%d\n", t->id,t->contArray[0].id,t->contArray[1].id,t->contArray[2].id);
 
+
   //Mettre le tout dans une boucle while
   //libérer le malloc fait précédemment
   free(t);
 }
+
+
 
 void truck(transport *t){
 
@@ -223,6 +228,8 @@ void truck(transport *t){
   pthread_cond_broadcast(&truckAdv);
   free(t);
 }
+
+
 
 void train(transport *t){
 

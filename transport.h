@@ -16,6 +16,7 @@ typedef struct transport{
   container* contArray;
   int pos;
   int shmid;
+
 }transport;
 
 

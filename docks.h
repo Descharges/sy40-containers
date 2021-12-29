@@ -36,6 +36,7 @@ typedef struct Dboats{
 }Dboats;
 
 typedef struct Docks{
+  
   Dtrains trainSharedDock;
   Dtrucks trucksSharedDock;
   Dboats boatSharedDock;
@@ -49,3 +50,4 @@ void printShmem(int shmid);
 
 void lock(int arg);
 void unlock(int arg);
+
