@@ -1,33 +1,46 @@
 #include "main.h"
 #include "transportGeneration.h"
+#include "docks.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
 
+
+
+
 void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
 
-void main(){
+int main(){
   //create the shared memory struct
-  Docks *docks;
-  docks = init();
+  shmemInit();
+  Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
+  memset(docks, -1, sizeof(Docks));
+
+
+  printShmem(getShmid());
 
   genCrane();
   genTerrain();
   genTransport(docks);
+  return 0;
 }
 
 void genCrane(){
-  printf("Crane generated with TID=%d\n",1);
+
+
 }
 
 void genTerrain(){
   printf("Terrain generated with TID=%d\n",2);
 }
+
+
 
 //Return the biggest amount of missing container or missing places on dock(r[0]) and its corresponding destination(r[1])
 int * getDockInequality(int containerDispositions[26]) {
@@ -105,6 +118,7 @@ void genTransport(Docks* docks){
     transportToGenerate->contArray = NULL;
     randomDestinationNo = rand() % (sizeof(destinations)/sizeof(destinations[0]));
     transportToGenerate->dest = destinations[randomDestinationNo];
+
 
     //Generate randomly a vehicle with probability depending on the number of its container
     if(randomPercentage < trainProbability){

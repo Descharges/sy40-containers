@@ -1,26 +1,39 @@
 #include "transport.h"
 #include <pthread.h>
 #include <signal.h>
+#include <stdio.h>
 #include <time.h>
+
 
 //===Mutex to handle the access to the docks
 //Train
+pthread_cond_t trainWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
 pthread_mutex_t trainMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t trainDockQueue = PTHREAD_COND_INITIALIZER,//Contain only 2 trains
-trainWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
-//Truck
-pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER, posMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t truckQueue = PTHREAD_COND_INITIALIZER, truckAdv= PTHREAD_COND_INITIALIZER;
-pthread_mutex_t advMutex = PTHREAD_MUTEX_INITIALIZER;
+int nTrains = 0;
+pthread_cond_t trainsAdv = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t advTrainMutex = PTHREAD_MUTEX_INITIALIZER;
+
 //Boat
-pthread_mutex_t boatMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t boatWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
+pthread_mutex_t boatMutex = PTHREAD_MUTEX_INITIALIZER;
+int nBoats = 0;
 
-char pos[10];
-
+//Truck
+pthread_cond_t truckWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
+pthread_mutex_t truckMutex = PTHREAD_MUTEX_INITIALIZER;
 int nTrucks = 0;
+pthread_cond_t truckAdv = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t advMutex = PTHREAD_MUTEX_INITIALIZER;
+int truckTurn = 0;
+pthread_mutex_t mutexTruckTurn = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t nBoatMutex = PTHREAD_MUTEX_INITIALIZER;
+
+container nullContainer;
+
+
 
 void transportFunc(transport* t){
+  nullContainer.id = -1;
   switch (t->type){
     case 'b'://boat
       boat(t);
@@ -29,7 +42,7 @@ void transportFunc(transport* t){
       train(t);
       break;
     case 'T'://Truck (maybe find a better letter ? idk)
-      //truck(t);
+      truck(t);
       break;
   }
 }
@@ -39,218 +52,256 @@ void sigHandler(int signo){
   }
 
 void boat(transport *t){
- 
-  bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
 
-  transport boat = *((transport*)(t));
+  //TODO: remettre le booléen
 
-  signal(SIGALRM, sigHandler);
 
-  
-   
+
+  //Set the interupt action
+  struct sigaction unpauseSigaction;
+  unpauseSigaction.sa_handler = sig_handler;
+  sigemptyset (&unpauseSigaction.sa_mask);
+  unpauseSigaction.sa_flags = 0;
+  sigaction(SIGINT, &unpauseSigaction, NULL);
+
+  //get the pointer to the struct
+  Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
+  Dboats *boatsDock = &(docks->boatSharedDock);
+
+
+
+
+  printf("[BOAT %d]arriving...\n", t->id);
+
   //If there is no room available on the docks, come in the waiting queue
+
+  //Accessing the dock using nBoats variable
   pthread_mutex_lock(&boatMutex);
-    printf("2Boat occupying top position : %d ; Boat occupying mid position : %d\n", boat.shmem.boatSharedDock->trs[0], boat.shmem.boatSharedDock->trs[1]);
-    if(boat.shmem.boatSharedDock->trs[0]>=0 && boat.shmem.boatSharedDock->trs[1]>=0){
-      printf("Boat %d arrive in the waiting queue\n", boat.id);
-      pthread_cond_wait(&boatWaitingQueue, &boatMutex);
-    }
-    printf("Boat %d arrive on the dock\n", boat.id);
-    
-  
-
-  //==Give the boat its initial position
-
-    for(int i = 0 ; i<NB_OF_BOATS ; i++){
-      if(boat.shmem.boatSharedDock->trs[i]<0){
-        boat.shmem.boatSharedDock->trs[i] = boat.id;
-        break;
-      }
-    }
+  if (nBoats >= 2){
+    printf("[BOAT %d]Waiting to enter docks...\n",t->id);
+    pthread_cond_wait(&boatWaitingQueue,&boatMutex);
+  }
+  printf("[BOAT %d]Entering the docks with %d,%d,%d\n", t->id, t->contArray[0].id,t->contArray[1].id,t->contArray[2].id);
+  nBoats++;
   pthread_mutex_unlock(&boatMutex);
 
-  //TO DO : use shmem to add containers on the docks
+  //setting itself up in shared memory
+  lock(BOAT);
+  if(boatsDock->trs[0] == -1){
+    boatsDock->trs[0] = t->id;
+    t->pos = 0;
+    boatsDock->cont[0] = t->contArray[0];
+    boatsDock->cont[1] = t->contArray[1];
+    boatsDock->cont[2] = t->contArray[2];
+  }else{
+    boatsDock->trs[1] = t->id;
+    t->pos = 1;
+    boatsDock->cont[3] = t->contArray[0];
+    boatsDock->cont[4] = t->contArray[1];
+    boatsDock->cont[5] = t->contArray[2];
+  }
+  unlock(BOAT);
 
-  
-  //Pause as long as SIGALRM is not received
-  pause();
 
-  printf("Boat occupying top position : %d ; Boat occupying mid position : %d\n", boat.shmem.boatSharedDock->trs[0], boat.shmem.boatSharedDock->trs[1]);
-  //TO DO : filledWithGoodDestination
-    if(filledWithGoodDestination){//LES REMETTRE DANS LA WAITING QUEUE SI BESOIN (cf camion)
+  //Waiting for whatever is telling the boat to leave
+  //sleep(3);
 
-      //Leave (= destruction) TO DO
-      printf("Boat %d leave\n", boat.id);
+  //removing itself from shared mem
+  lock(BOAT);
+  boatsDock->trs[t->pos] = -1;
+  t->contArray[0] = boatsDock->cont[t->pos * 3];
+  t->contArray[1] = boatsDock->cont[(t->pos * 3)+1];
+  t->contArray[2] = boatsDock->cont[(t->pos * 3)+2];
+  boatsDock->cont[t->pos * 3] = nullContainer;
+  boatsDock->cont[(t->pos * 3)+1] = nullContainer;
+  boatsDock->cont[(t->pos * 3)+2]  = nullContainer;
 
-      //The boat is removed from its place on the dock
-      pthread_mutex_lock(&boatMutex);
-        if(boat.shmem.boatSharedDock->trs[0] == boat.id){
-          boat.shmem.boatSharedDock->trs[0] = -1;
-        }else if(boat.shmem.boatSharedDock->trs[1] == boat.id){
-          boat.shmem.boatSharedDock->trs[1] = -1;
-        }else{
-          printf("Au secours ! un bateau veux partir mais n'est même pas sur les quais !!!\n");
-        }
-      pthread_mutex_unlock(&boatMutex);
+  //TODO: idk
+  unlock(BOAT);
 
-      //Give signal for the next boat in the waiting queue to come
-      pthread_mutex_lock(&boatMutex);
-        pthread_cond_signal(&boatWaitingQueue);
-      pthread_mutex_unlock(&boatMutex);
-    }else{
-      //TO DO : go back in queue
+  //Lowering nBoats and sending signal
+  pthread_mutex_lock(&boatMutex);
+  nBoats--;
+  pthread_mutex_unlock(&boatMutex);
+  pthread_cond_signal(&boatWaitingQueue);
+
+  printf("[BOAT %d]Leaving the docks with %d,%d,%d\n", t->id,t->contArray[0].id,t->contArray[1].id,t->contArray[2].id);
+
+
+  //Mettre le tout dans une boucle while
+  //libérer le malloc fait précédemment
+  free(t);
+}
+
+
+
+void truck(transport *t){
+
+  int turn = 0;
+
+  //Set sigaction
+  struct sigaction unpauseSigaction;
+  unpauseSigaction.sa_handler = sig_handler;
+  sigemptyset (&unpauseSigaction.sa_mask);
+  unpauseSigaction.sa_flags = 0;
+  sigaction(SIGINT, &unpauseSigaction, NULL);
+
+  //get the pointer to the struct
+  Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
+  Dtrucks *trucksDock = &(docks->trucksSharedDock);
+
+  printf("[TRUCK %d]arriving...\n", t->id);
+
+  pthread_mutex_lock(&truckMutex);
+  if (nTrucks >= 10){
+    printf("[TRUCK %d]Waiting to enter docks...\n",t->id);
+    pthread_cond_wait(&truckWaitingQueue,&truckMutex);
+    t->pos = 9-nTrucks;
+  }else{
+    t->pos = 9-nTrucks;
+  }
+  nTrucks++;
+  printf("[TRUCK %d]Entering the docks at pos %d with container %d\n", t->id, t->pos, t->contArray->id);
+  pthread_mutex_unlock(&truckMutex);
+
+  lock(TRUCK);
+  trucksDock->trs[t->pos] = t->id; 
+  trucksDock->cont[t->pos] = *(t->contArray);
+  unlock(TRUCK);
+
+  while (t->pos < 9){
+    //wait for the signal to advance
+    pthread_mutex_lock(&advMutex);
+    pthread_cond_wait(&truckAdv, &advMutex);
+    pthread_mutex_unlock(&advMutex);
+
+    
+    do{
+      pthread_mutex_lock(&mutexTruckTurn);
+      turn = truckTurn;
+      pthread_mutex_unlock(&mutexTruckTurn);
+    }while(turn != t->pos);
+
+
+    lock(TRUCK);
+    trucksDock->trs[t->pos] = -1;
+    if(t->pos == 0){
+      pthread_cond_signal(&truckWaitingQueue);
     }
+    t->pos++;
+    trucksDock->trs[t->pos] = t->id;
+    trucksDock->cont[t->pos] = trucksDock->cont[t->pos - 1];
+    trucksDock->cont[t->pos - 1] = nullContainer;
+    unlock(TRUCK);
+    printf("[TRUCK %d]Moving forward to pos %d\n", t->id, t->pos);
 
+    pthread_mutex_lock(&mutexTruckTurn);
+    truckTurn--;
+    lock(TRUCK);
+    while(trucksDock->trs[truckTurn] == -1 && truckTurn!=0){
+      truckTurn--;
+    } 
+    unlock(TRUCK);
+    pthread_mutex_unlock(&mutexTruckTurn);
+  }
+
+  //waiting to get order to move forward
+  sleep(3);
+
+  pthread_mutex_lock(&truckMutex);
+  nTrucks--;
+  pthread_mutex_unlock(&truckMutex);
+
+  pthread_mutex_lock(&mutexTruckTurn);
+  truckTurn = 8;
+  pthread_mutex_unlock(&mutexTruckTurn);
+
+  lock(TRUCK);
+  trucksDock->trs[t->pos] = -1;
+  *(t->contArray) = trucksDock->cont[t->pos];
+  trucksDock->cont[t->pos] = nullContainer;
+  unlock(TRUCK);
+
+
+  printf("[TRUCK %d]Leaving with  container %d\n", t->id, t->contArray->id);
+
+  pthread_cond_broadcast(&truckAdv);
+  free(t);
 }
 
 
 
 void train(transport *t){
 
-  printf("Train %d arrive\n", t->id);
+  //Set sigaction
+  struct sigaction unpauseSigaction;
+  unpauseSigaction.sa_handler = sig_handler;
+  sigemptyset (&unpauseSigaction.sa_mask);
+  unpauseSigaction.sa_flags = 0;
+  sigaction(SIGINT, &unpauseSigaction, NULL);
 
-  bool filledWithGoodDestination = true;//Should be set to FALSE at the beginning
-  bool isOnTopPosition = false;
+  //get the pointer to the struct
+  Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
+  Dtrains *trainDock = &(docks->trainSharedDock);
 
-  transport train = *((transport*)(t));
- 
-  //If there is no room available on the docks, come in the waiting queue
+  printf("[TRAIN %d]arriving...\n", t->id);
+
   pthread_mutex_lock(&trainMutex);
-    //A retravailler pour la scalabilité
-    /*for(int i = 0 ; i<NB_OF_TRAINS ; i++){
-      if(train.shmem.trainSharedDock->trs[i]<0){
-        goInWaitingQueue = false;
-        break;
-      }
-    }
-    if(goInWaitingQueue){
-      pthread_cond_wait(&trainWaitingQueue, &trainMutex);
-    }*/
-    if(train.shmem.trainSharedDock->trs[0]>=0 && train.shmem.trainSharedDock->trs[1]>=0){
-      pthread_cond_wait(&trainWaitingQueue, &trainMutex);
-    }
-  pthread_mutex_unlock(&trainMutex);
-
-  printf("COUCOU");
-  //==Give the train its initial position
-  pthread_mutex_lock(&trainMutex);
-    for(int i = 0 ; i<NB_OF_TRAINS ; i++){
-        if(train.shmem.trainSharedDock->trs[i]<0){
-          train.shmem.trainSharedDock->trs[i] = train.id;
-          if(i==0)
-            isOnTopPosition = true;
-          break;
-        }
-      }
-  pthread_mutex_unlock(&trainMutex);
-
-  //For TEST purpose
-  if(train.id == 0){
-  }else if(train.id == 3){
-    pthread_cond_signal(&trainDockQueue);
-  }
-
-  //===The train wait
-  pthread_mutex_lock(&trainMutex);
-    pthread_cond_wait(&trainDockQueue, &trainMutex);
-  pthread_mutex_unlock(&trainMutex);
-  sleep(1);
-
-  //===Check if the train should move
-    pthread_mutex_lock(&trainMutex);
-      //If there is no train on top position
-      if(train.shmem.trainSharedDock->trs[0] < 0){
-        //move to the top position
-        isOnTopPosition = true;
-        train.shmem.trainSharedDock->trs[0] = train.id;
-        train.shmem.trainSharedDock->trs[1] = -1;
-        printf("Train %d take the top position\n", train.id);
-      }
-    pthread_mutex_unlock(&trainMutex);
-
-    printf("Train occupying top position : %d ; Train occupying mid position : %d\n", train.shmem.trainSharedDock->trs[0], train.shmem.trainSharedDock->trs[1]);
-
-    if(filledWithGoodDestination && isOnTopPosition){
-      //Leave (= destruction) TO DO
-      printf("Train %d leave\n", train.id);
-      //Give signal to the next train on the dock to come
-      pthread_mutex_lock(&trainMutex);
-        train.shmem.trainSharedDock->trs[0] = -1;
-        pthread_cond_signal(&trainDockQueue);
-      pthread_mutex_unlock(&trainMutex);
-      //Give signal for the next train in the waiting queue to come
-      pthread_mutex_lock(&trainMutex);
-        pthread_cond_signal(&trainWaitingQueue);
-      pthread_mutex_unlock(&trainMutex);
-    }
-}
-
-
-
-/*
-void truck(transport* t){
-  //Wait for signal that a case is available for him
-  pthread_mutex_lock(&truckMutex);
-  if (nTrucks < 10){
-    t->pos = 10-nTrucks;
+  if (nTrains >= 2){
+    printf("[TRAIN %d]Waiting to enter docks...\n",t->id);
+    pthread_cond_wait(&trainWaitingQueue,&trainMutex);
+    t->pos = 1-nTrains;
   }else{
-    //printf("[TRUCK ID=%d]Waiting to enter docks...\n",t->id);
-    pthread_cond_wait(&truckQueue, &truckMutex);
-    t->pos = 1;
+    t->pos = 1-nTrains;
   }
-  nTrucks++;
-  pthread_mutex_unlock(&truckMutex);
+  nTrains++;
+  printf("[TRAIN %d]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
+  pthread_mutex_unlock(&trainMutex);
 
-  //Change his value in the row
-  pthread_mutex_lock(&posMutex);
-  t->shmem->cdocks.trucks[(t->pos)-1] = t->id;
-  pthread_mutex_unlock(&posMutex);
+  lock(TRAIN);
+  trainDock->trs[t->pos] = t->id;
+  for(int i=0; i<5;i++){
+    trainDock->cont[((t->pos)*5)+i] = t->contArray[i];
+  }
+  unlock(TRAIN);
 
-  //printf("[TRUCK ID=%d]The truck entered the dock at position %d\n",t->id,t->pos);
-
-  while(t->pos != 10){
-
-    pthread_mutex_lock(&advMutex);
-    pthread_cond_wait(&truckAdv, &advMutex);
-    pthread_mutex_unlock(&advMutex);
-
-    t->pos++;
-    pthread_mutex_lock(&posMutex);
-    t->shmem->cdocks.trucks[(t->pos)-1] = t->id;
-    pthread_mutex_unlock(&posMutex);
-    if(t->pos == 2){
-      pthread_cond_signal(&truckQueue);
+  while (t->pos < 1){
+    pthread_mutex_lock(&advTrainMutex);
+    pthread_cond_wait(&trainsAdv, &advTrainMutex);
+    pthread_mutex_unlock(&advTrainMutex);
+    lock(TRAIN);
+    trainDock->trs[t->pos] = -1;
+    if(t->pos == 0){
+      pthread_cond_signal(&trainWaitingQueue);
     }
-    //printf("[TRUCK ID=%d]The truck move forward to position %d\n",t->id,t->pos);
+    t->pos++;
+    trainDock->trs[t->pos] = t->id;
+    for(int i=0; i<5;i++){
+      trainDock->cont[(t->pos *5)+i] = trainDock->cont[((t->pos -1)*5)+i];
+      trainDock->cont[((t->pos -1)*5)+i] = nullContainer;
+    }
+    unlock(TRAIN);
+    printf("[TRAIN %d]Moving forward to pos %d\n", t->id, t->pos);
   }
 
-  sleep(1); //Here goes the dicision to go or not
+  //waiting to get order to move forward
+  sleep(3);
 
-  //I should secure all thoses prints but :
-  //1-Prints are read only
-  //2-It's only debug and won't stay
-  //3-I'm lazy
+  pthread_mutex_lock(&trainMutex);
+  nTrains--;
+  pthread_mutex_unlock(&trainMutex);
 
-  printf("\e[1;1H\e[2J");
-  printf("[TRUCK ID=%d]The truck is leaving...\n",t->id);
-  printf("[TRUCK ID=%d]Number of trucks =%d\n",t->id,nTrucks);
-  for(int i=0;i<10;i++){
-    printf("-[%d]-",t->shmem->cdocks.trucks[i]);
+  lock(TRAIN);
+  trainDock->trs[t->pos] = -1;
+  for(int i=0; i<5;i++){
+    t->contArray[i] = trainDock->cont[((t->pos)*5)+i];
+    trainDock->cont[((t->pos)*5)+i] = nullContainer;
   }
-  printf("\n\n");
+  
+  unlock(TRAIN);
 
+   printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
-  pthread_mutex_lock(&truckMutex);
-  nTrucks--;
-  pthread_mutex_unlock(&truckMutex);
-
-  //reset the array to avoid duplicates
-  pthread_mutex_lock(&posMutex);
-  memset(t->shmem->cdocks.trucks, 0, sizeof t->shmem->cdocks.trucks);
-  pthread_mutex_unlock(&posMutex);
-  pthread_cond_broadcast(&truckAdv);
-
+  pthread_cond_broadcast(&trainsAdv);
   free(t);
-  pthread_exit(NULL);
 }
-*/

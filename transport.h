@@ -6,7 +6,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "container.h"
 #include "docks.h"
 
 //Structure to define transportation method
@@ -16,7 +15,8 @@ typedef struct transport{
   char dest;
   container* contArray;
   int pos;
-  Docks shmem;//jsp pk mais quand c'est un pointeur impossible d'accéder à trainToGenerate->shmem->trainSharedDock donc j'ai enlevé le pointeur
+  int shmid;
+
 }transport;
 
 

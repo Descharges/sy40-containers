@@ -1,2 +1,3 @@
 # sy40-containers
-A project for the SY40 class.
+
+A project for the sy40 class.

@@ -1,4 +1,3 @@
-#include "transport.h"
 
 //To know how much container and free place per destination there is
 typedef struct ContainerDisposition{
@@ -10,4 +9,4 @@ void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
 
-void main();
+int main();

@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "transportGeneration.h": "c",
-        "unistd.h": "c",
-        "docks.h": "c"
-    }
-}
