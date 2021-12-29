@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
+#include <signal.h>
 
 
 #define TOTAL_NUMBER_OF_BOATS 4//For TEST purpose, it should be unlimited
@@ -17,8 +18,7 @@ void crane(){
 
 }
 
-
-//For TEST purpose, should probably be with the truck and boat generation
+//For TEST purpose
 void generateTrains(){
 
     pthread_t thread[TOTAL_NUMBER_OF_BOATS];
@@ -37,9 +37,10 @@ void generateTrains(){
     //Train thread creation
     for(int  i = 0 ; i<TOTAL_NUMBER_OF_BOATS ; i++){//Finite loop for TEST purpose
         transport* trainToGenerate = malloc(sizeof(transport));
-        trainToGenerate->shmem.trainSharedDock = trainSharedDock;
+        trainToGenerate->shmem.trainDock = trainSharedDock;
         trainToGenerate->type = 't';
         trainToGenerate->id = i;
+
         if (pthread_create(thread+i, 0,(void *) train, trainToGenerate) != 0)
 	        perror("Erreur Creation thread");
     }
@@ -51,7 +52,7 @@ void generateTrains(){
 }
 
 
-//For TEST purpose, should probably be with the truck and train generation
+//For TEST purpose
 void generateBoats(){
 
     pthread_t thread[TOTAL_NUMBER_OF_BOATS];
@@ -66,8 +67,8 @@ void generateBoats(){
     for(int i = 0 ; i<NB_OF_BOATS ; i++)
         boatSharedDock->cont[i] = -1;
 
-    
-    //Train thread creation
+    srand(time(NULL));
+    //Boat thread creation
     for(int  i = 0 ; i<TOTAL_NUMBER_OF_BOATS ; i++){//Finite loop for TEST purpose
         transport* boatToGenerate = malloc(sizeof(transport));
         boatToGenerate->shmem.boatSharedDock = boatSharedDock;
@@ -76,8 +77,8 @@ void generateBoats(){
         if (pthread_create(thread+i, 0,(void *) boat, boatToGenerate) != 0)
 	        perror("Erreur Creation thread");
     }
-
-    //Train thread destruction
+    pthread_kill(thread[0], SIGALRM);
+    //Boat thread destruction
     for(int i=0;i<TOTAL_NUMBER_OF_BOATS;i++){
             pthread_join(thread[i],NULL);
         }

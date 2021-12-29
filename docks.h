@@ -33,8 +33,9 @@ typedef struct Dboats{
 }Dboats;
 
 typedef struct Docks{
-  Dtrains *trainSharedDock;
-  Dtrucks trucksSharedDock;
-  Dboats *boatSharedDock;
+  Dtrains *trainDock;
+  Dtrucks *truckDock;
+  Dboats *boatDock;
 }Docks;
 
+Docks* init();
