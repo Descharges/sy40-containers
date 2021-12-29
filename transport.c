@@ -59,7 +59,7 @@ void boat(transport *t){
 
   //Set the interupt action
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);
@@ -141,7 +141,7 @@ void truck(transport *t){
 
   //Set sigaction
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);
@@ -232,10 +232,9 @@ void truck(transport *t){
 
 
 void train(transport *t){
-
   //Set sigaction
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);
@@ -252,12 +251,15 @@ void train(transport *t){
     pthread_cond_wait(&trainWaitingQueue,&trainMutex);
     t->pos = 1-nTrains;
   }else{
+   
     t->pos = 1-nTrains;
   }
   nTrains++;
   printf("[TRAIN %d]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
+  
+  
   pthread_mutex_unlock(&trainMutex);
-
+  
   lock(TRAIN);
   trainDock->trs[t->pos] = t->id;
   for(int i=0; i<5;i++){
@@ -304,4 +306,5 @@ void train(transport *t){
 
   pthread_cond_broadcast(&trainsAdv);
   free(t);
+  
 }
