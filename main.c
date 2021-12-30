@@ -58,6 +58,8 @@ int main(){
   genInitialTransport(docks);
   genTransport();
 
+  while(1){}
+
 
 
   //For testing purposes only
@@ -92,7 +94,6 @@ int * getDockInequality(int containerDispositions[26]) {
     }
   }
   
-  printf("coucou de inequality\n");
 
   if(caseNb == -1){
     return NULL;
@@ -186,7 +187,6 @@ void genInitialTransport(Docks* docks){
 
     transport* transportToGenerate = malloc(sizeof(transport));
     randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
-    printf("random dest no : %d\n", randomDestinationNo);
 
     transportToGenerate->dest = destinations[randomDestinationNo];
     transportToGenerate->shmid = getShmid();
@@ -356,6 +356,7 @@ void genTransport(){
   
   type = 'b';
   //=== Get dock shmem inequalities(difference between container and free places)
+    type = 'b';
     Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
     //Same functionning as genInitialTransport
     int containerDispositions[26];

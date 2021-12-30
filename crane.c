@@ -20,7 +20,7 @@ void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem){
             shmem->trainSharedDock.cont[x1].dest = 0;
             break;
         default: //boats
-            buffer = shmem->boatSharedDock.cont[x2];
+            buffer = shmem->boatSharedDock.cont[x1];
             shmem->boatSharedDock.cont[x1].id = -1;
             shmem->boatSharedDock.cont[x1].dest = 0;
             break;
@@ -31,10 +31,10 @@ void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem){
             shmem->trucksSharedDock.cont[x2] = buffer;
             break;
         case 't':
-            shmem->trucksSharedDock.cont[x2] = buffer;
+            shmem->trainSharedDock.cont[x2] = buffer;
             break;
         default: //boats
-            shmem->trucksSharedDock.cont[x2] = buffer;
+            shmem->boatSharedDock.cont[x2] = buffer;
             break;
     }
 }
