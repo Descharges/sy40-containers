@@ -108,10 +108,10 @@ void generateTrucks(){
 
         t->type = 'T';
         t->id = i+1;
-        t->dest = 'A';
+        t->dest = 'B'-i;
         t->shmid = getShmid();
         c->id = i-1;
-        c->dest = 'A';
+        c->dest = 'A'+i;
         t->contArray = c;
 
         if (pthread_create(thread+i, 0,(void *) transportFunc, t) != 0){

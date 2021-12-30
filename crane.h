@@ -16,5 +16,5 @@ typedef struct Crane{
 }Crane;
 
 void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem);
-void crane(Crane* c);
+void* craneFunc(Crane* c);
 #endif
