@@ -10,7 +10,7 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 
-#define NUMBER_OF_DESTINATION 2
+#define NUMBER_OF_DESTINATION 3
 
 
 void genCrane();//generate the crane (portique)
@@ -28,7 +28,9 @@ int main(){
 
   genCrane();
   genTerrain();
-  genTransport(docks);
+  genInitialTransport(docks);
+
+  genTransport();
   return 0;
 }
 
@@ -48,12 +50,12 @@ int * getDockInequality(int containerDispositions[26]) {
 
   static int  r[2];
 
-  int max = 0;
+  int min = 0;
   int caseNb = -1;
 
   for(int i = 0 ; i < NUMBER_OF_DESTINATION ; i++){
-    if(abs(containerDispositions[i]) > max){
-      max = abs(containerDispositions[i]);
+    if(containerDispositions[i] < min){
+      min = containerDispositions[i];
       caseNb = i;
     }
   }
@@ -69,19 +71,31 @@ int * getDockInequality(int containerDispositions[26]) {
   return r;
 }
 
+//Ask for a char, give the corresponding int
+int getNoDestination(char* destinations, char desiredDestination){
+  
+  int noDestination;
+
+  for(int i = 0 ; i<NUMBER_OF_DESTINATION ; i++){
+    if(desiredDestination == destinations[i])
+      noDestination = i;
+  }
+  
+  return noDestination;
+}
 
 
 
-void genTransport(Docks* docks){
+void genInitialTransport(Docks* docks){
   printf("Generating transport methods...\n");
 
   srand(time(NULL));
 
-  //TO DO : make a malloc for the threads
-  pthread_t thread[100];
+
+  pthread_t thread[50];
   int i = 0;
 
-  char destinations[] = {'A', 'B'};
+  char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
   int incrementingId = 0, incrementingContainerId = 0;
   //To know how much container per destination there is. Can also be NEGATIVE, in this case this is the number of free place on the vehicles
   //The case of the array give the destination(26 letters of the alphabet)
@@ -190,7 +204,7 @@ void genTransport(Docks* docks){
   
 
 
-  //===We count the inequalities on dock and generate filled vehicles accordingly 
+  //===We count the inequalities(is there more container of free places?) on dock and generate filled vehicles accordingly 
   for(int i = 0 ; i<11 ; i++){
 
     transport* transportToGenerate = malloc(sizeof(transport));
@@ -253,11 +267,61 @@ void genTransport(Docks* docks){
   sleep(1);
   printShmem(getShmid());
 
-  //Generate randomly a few others vehicles
 
 
-  //===Infinite loop
-  //If a vehicle leave, transport generator is waken up (signal or monitor?)
-  //Generate 0, 1 or 2 vehicles of the same type with equiprobability
+}
+
+
+void genTransport(){
+  
+  char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
+
+
+  //pause();
+
+  //=== Get msg from crane to know which vehicle is gone
+  //Get ALL wainting msg
+  //msgctl() to know if there is msg
+  //msgrcv 
+
+  //=== Get dock shmem inequalities(difference between container and free places)
+    Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
+    //Same functionning as genInitialTransport
+    int containerDispositions[26];
+    for(int i = 0 ; i<26 ; i++)
+      containerDispositions[i] = 0;
+
+    for(int i = 0 ; i<NB_CONTAINER_TRUCK ; i++){
+      if(docks->trucksSharedDock.cont[i].dest == -1){
+        //containerDispositions[getNoDestination(destinations, charDestination)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->trucksSharedDock.cont[i].dest)] +=1;
+      }
+    }
+    printf("Number of cont on A : %d\n", containerDispositions[0]);
+
+    for(int i = 0 ; i<NB_CONTAINER_TRAIN ; i++){
+      if(docks->trainSharedDock.cont[i].dest == -1){
+        //containerDispositions[getNoDestination(destinations, charDestination)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->trainSharedDock.cont[i].dest)] +=1;
+      }
+    }
+    printf("Number of cont on A : %d\n", containerDispositions[0]);
+
+    for(int i = 0 ; i<NB_CONTAINER_BOAT ; i++){
+      if(docks->boatSharedDock.cont[i].dest == -1){
+        //containerDispositions[getNoDestination(destinations, charDestination)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->boatSharedDock.cont[i].dest)] +=1;
+      }
+    }
+    printf("Number of cont on A : %d\n", containerDispositions[0]);
+
+
+  //=== Generate vehicle according to msg and inequality
+  //0,1 or 2 vehicles
+  //ONLY GENERATE FILLED VEHICLE?!
+
 
 }
