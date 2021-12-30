@@ -29,7 +29,7 @@ int main(){
 
   printShmem(getShmid());
 
-  genCrane();
+  
   genTerrain();
 
   genInitialTransport(docks);
@@ -341,7 +341,8 @@ void genTransport(){
     perror("Erreur de lecture requete P2\n");
     exit(1);
   }*/
-
+  
+  type = 'b';
   //=== Get dock shmem inequalities(difference between container and free places)
     Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
     //Same functionning as genInitialTransport
