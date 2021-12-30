@@ -10,8 +10,10 @@
 #include <pthread.h>
 #include <sys/shm.h>
 #include <sys/ipc.h>
+#include <sys/msg.h>
 
-#define NUMBER_OF_DESTINATION 2
+#define NUMBER_OF_DESTINATION 3
+int incrementingId = 0, incrementingContainerId = 0;
 
 
 void genCrane();//generate the crane (portique)
@@ -44,7 +46,6 @@ int main(){
 
 
   //For testing purposes only
-  generateTrucks();
   printf("[CONTROL] Transports threads created\n");
 
   pthread_t crane;
@@ -53,17 +54,25 @@ int main(){
   c->shmid = getShmid();
   pthread_create(&crane, 0,(void*)craneFunc, c);
   printf("[CONTROL] Crane thread created\n");
-
-  while(1){}
    
+  genInitialTransport(docks);
+  genTransport();
+
+
+
+  //For testing purposes only
+ /* generateTrucks();
+  sleep(2);
+  lock(FULL);
+  pickAndPlace('T', 8, 'T', 9, docks);
+  pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
+  unlock(FULL);
+  sleep(10);*/
 
 
 
 
 
-
-
-  
   return 0;
 }
 
@@ -73,15 +82,17 @@ int * getDockInequality(int containerDispositions[26]) {
 
   static int  r[2];
 
-  int max = 0;
+  int min = 0;
   int caseNb = -1;
-
+  
   for(int i = 0 ; i < NUMBER_OF_DESTINATION ; i++){
-    if(abs(containerDispositions[i]) > max){
-      max = abs(containerDispositions[i]);
+    if(containerDispositions[i] < min){
+      min = containerDispositions[i];
       caseNb = i;
     }
   }
+  
+  printf("coucou de inequality\n");
 
   if(caseNb == -1){
     return NULL;
@@ -94,20 +105,31 @@ int * getDockInequality(int containerDispositions[26]) {
   return r;
 }
 
+//Ask for a char, give the corresponding int
+int getNoDestination(char* destinations, char desiredDestination){
+  
+  int noDestination;
+
+  for(int i = 0 ; i<NUMBER_OF_DESTINATION ; i++){
+    if(desiredDestination == destinations[i])
+      noDestination = i;
+  }
+  
+  return noDestination;
+}
 
 
 
-void genTransport(Docks* docks){
+void genInitialTransport(Docks* docks){
   printf("Generating transport methods...\n");
 
   srand(time(NULL));
 
-  //TO DO : make a malloc for the threads
-  pthread_t thread[100];
+
+  pthread_t thread[50];
   int i = 0;
 
-  char destinations[] = {'A', 'B'};
-  int incrementingId = 0, incrementingContainerId = 0;
+  char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
   //To know how much container per destination there is. Can also be NEGATIVE, in this case this is the number of free place on the vehicles
   //The case of the array give the destination(26 letters of the alphabet)
   int containerDispositions[26];
@@ -214,7 +236,7 @@ void genTransport(Docks* docks){
   
 
 
-  //===We count the inequalities on dock and generate filled vehicles accordingly 
+  //===We count the inequalities(is there more container of free places?) on dock and generate filled vehicles accordingly 
   for(int i = 0 ; i<11 ; i++){
 
     transport* transportToGenerate = malloc(sizeof(transport));
@@ -277,11 +299,164 @@ void genTransport(Docks* docks){
   sleep(1);
   printShmem(getShmid());
 
-  //Generate randomly a few others vehicles
+}
 
 
-  //===Infinite loop
-  //If a vehicle leave, transport generator is waken up (signal or monitor?)
-  //Generate 0, 1 or 2 vehicles of the same type with equiprobability
 
+
+void genTransport(){
+  
+  char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
+  //TO DO : malloc the pthread_t
+  pthread_t thread[50];
+
+  //For detached threads
+  pthread_attr_t thread_attr;
+  if (pthread_attr_init (&thread_attr) != 0) {
+    fprintf (stderr, "pthread_attr_init error");
+    exit (1);
+  }
+  if (pthread_attr_setdetachstate (&thread_attr, PTHREAD_CREATE_DETACHED) != 0) {
+    fprintf (stderr, "pthread_attr_setdetachstate error");
+    exit (1);
+  }
+
+  int randomDestinationNo = 0, randomNbOfVehicle = 0;;
+
+  int *inequality;
+  char type;
+  //pause();
+
+
+  //=== Get msg from crane to know which vehicle is gone
+  //Get ALL waiting msg
+  /*int msgid;
+  key_t cle;
+  if ((cle = ftok("./", 'A')) == -1) {
+	perror("Erreur de creation de la clé \n");
+	exit(1);
+    }
+
+  if ((msgid = msgget(cle, IPC_CREAT | IPC_EXCL | 0750)) == -1)
+    erreur("Pb msgget 1");
+
+  struct msqid_ds buf;
+  int numMsg;
+  msgctl(msgid, IPC_STAT, &buf);
+  numMsg = buf.msg_qnum;
+
+  type = 'b';
+  //Make as much generation as messages
+  for(int g = 0 ; g < numMsg ; g++){
+    
+  if ((msgrcv(msgid, &rep, tailleMsg, 1, 0)) == -1) {
+    perror("Erreur de lecture requete P2\n");
+    exit(1);
+  }*/
+
+  //=== Get dock shmem inequalities(difference between container and free places)
+    Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
+    //Same functionning as genInitialTransport
+    int containerDispositions[26];
+    for(int i = 0 ; i<26 ; i++)
+      containerDispositions[i] = 0;
+
+    for(int i = 0 ; i<NB_CONTAINER_TRUCK ; i++){
+      if(docks->trucksSharedDock.cont[i].dest == -1){
+        containerDispositions[getNoDestination(destinations, docks->trucksSharedDock.trs[i].dest)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->trucksSharedDock.cont[i].dest)] +=1;
+      }
+    }
+
+    for(int i = 0 ; i<NB_CONTAINER_TRAIN ; i++){
+      if(docks->trainSharedDock.cont[i].dest == -1){
+        containerDispositions[getNoDestination(destinations, docks->trainSharedDock.trs[i/5].dest)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->trainSharedDock.cont[i].dest)] +=1;
+      }
+    }
+
+    for(int i = 0 ; i<NB_CONTAINER_BOAT ; i++){
+      if(docks->boatSharedDock.cont[i].dest == -1){
+        containerDispositions[getNoDestination(destinations, docks->boatSharedDock.trs[i/3].dest)]-=1;
+      }else{
+        containerDispositions[getNoDestination(destinations, docks->boatSharedDock.cont[i].dest)] +=1;
+      }
+    }
+    printf("Number of cont on A : %d, B : %d, C : %d\n", containerDispositions[0],containerDispositions[1], containerDispositions[2]);
+
+    inequality = getDockInequality(containerDispositions);
+
+
+  //=== Generate vehicle according to msg and inequality
+    
+    randomNbOfVehicle = rand()%3;
+    //Loop the number of messages
+    //while(false){
+    //0,1 or 2 vehicles
+    for(int h = 0 ; h < randomNbOfVehicle ; h++){
+
+      transport* transportToGenerate = malloc(sizeof(transport));
+      randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
+      printf("random dest no : %d\n", randomDestinationNo);
+
+      transportToGenerate->dest = destinations[randomDestinationNo];
+      transportToGenerate->shmid = getShmid();
+      transportToGenerate->id = incrementingId;
+      if(type == 'b'){
+        //Boat
+        transportToGenerate->type = 'b';
+        container *filledBoatContArray = malloc(sizeof(container)*3);
+        
+        for(int j = 0 ; j<3 ; j++){
+
+          filledBoatContArray[j].id = incrementingContainerId;
+          incrementingContainerId++;
+
+          //If there is no need of container on docks
+          if(inequality == NULL){
+          //Generate free places
+          filledBoatContArray[j].dest = -1; 
+          }else{
+            //Generate containers
+            filledBoatContArray[j].dest = destinations[inequality[1]]; 
+          }
+        }
+
+        transportToGenerate->contArray = filledBoatContArray;
+      
+      }else if(type == 'T'){
+        //Truck
+        transportToGenerate->type = 'T';
+        container *filledTruckContArray = malloc(sizeof(container)*1);
+        filledTruckContArray[0].id = incrementingContainerId;
+        incrementingContainerId++;
+        filledTruckContArray[0].dest = destinations[inequality[1]];
+
+        transportToGenerate->contArray = filledTruckContArray;
+      }else{
+        //Boat
+        transportToGenerate->type = 't';
+        container *filledTrainContArray = malloc(sizeof(container)*3);
+        //Give container to the boat according to the needs of the dock
+        for(int j = 0 ; j<5 ; j++){
+          filledTrainContArray[j].id = incrementingContainerId;
+          incrementingContainerId++;
+          filledTrainContArray[j].dest = destinations[inequality[1]];
+        }
+
+          transportToGenerate->contArray = filledTrainContArray;
+      
+      }
+      
+      if (pthread_create(thread, &thread_attr,(void *) transportFunc, transportToGenerate) != 0)
+        perror("Erreur Creation thread");
+      incrementingId++;
+
+  //}
+    }
+  
+  //}
+  sleep(2);
 }

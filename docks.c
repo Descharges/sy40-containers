@@ -19,6 +19,7 @@ int getShmid(){
 void printShmem(int shmid){
 
   Docks* shmem = (Docks *)shmat(getShmid(), NULL, 0);
+  printf("---------\n");
   printf("Appercu dock :\n");
   printf("Trucks:\n");
   for (int i=0; i<NB_OF_TRUCKS; i++){
@@ -31,7 +32,14 @@ void printShmem(int shmid){
     printf("[%d/%c]",shmem->trucksSharedDock.cont[i].id,shmem->trucksSharedDock.cont[i].dest);
   }
   printf("\n");
+  for (int i=0; i<NB_CONTAINER_TRUCK; i++){
+    printf("[%c]",shmem->trucksSharedDock.cont[i].dest);
+    if(shmem->trucksSharedDock.cont[i].id>9 || shmem->trucksSharedDock.cont[i].id<0)
+      printf(" ");
+  }
+  printf("\n");
 
+  printf("---\n");
   printf("Boat:\n");
   for (int i=0; i<NB_OF_BOATS; i++){
     printf("[%d/%c]",shmem->boatSharedDock.trs[i].id,shmem->boatSharedDock.trs[i].dest);
@@ -43,7 +51,14 @@ void printShmem(int shmid){
     printf("[%d/%c]",shmem->boatSharedDock.cont[i].id,shmem->boatSharedDock.cont[i].dest);
   }
   printf("\n");
+  for (int i=0; i<NB_CONTAINER_BOAT; i++){
+    printf("[%c]",shmem->boatSharedDock.cont[i].dest);
+    if(shmem->boatSharedDock.cont[i].id>9 || shmem->boatSharedDock.cont[i].id<0)
+      printf(" ");
+  }
+  printf("\n");
 
+  printf("---\n");
   printf("Train:\n");
   for (int i=0; i<NB_OF_TRAINS; i++){
     printf("[%d/%c]",shmem->trainSharedDock.trs[i].id,shmem->trainSharedDock.trs[i].dest);
