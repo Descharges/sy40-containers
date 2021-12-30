@@ -2,7 +2,6 @@
 #include "transportGeneration.h"
 #include "transport.h"
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -105,7 +104,7 @@ void genTransport(Docks* docks){
   int currentDockPlacesTaken = 0;
   int randomPercentage = 0;
   int randomDestinationNo = 0;
-
+  
   //Probability which work perfectly with 5 cont for train, 3 for boat and 1 for truck
   double trainProbability = 100*3/23;
   double truckProbability = 100*15/23;
