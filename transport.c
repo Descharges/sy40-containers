@@ -1,4 +1,5 @@
 #include "transport.h"
+#include "docks.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -48,8 +49,8 @@ void transportFunc(transport* t){
 }
 
 void sigHandler(int signo){
-  printf("=========Signal handler triggered\n");
-  }
+  printf("[Signal handler triggered]\n");
+}
 
 void boat(transport *t){
 
@@ -61,7 +62,7 @@ void boat(transport *t){
   unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
-  sigaction(SIGINT, &unpauseSigaction, NULL);
+  sigaction(SIGUSR1, &unpauseSigaction, NULL);
 
   //get the pointer to the struct
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
@@ -91,15 +92,19 @@ void boat(transport *t){
 
   //setting itself up in shared memory
   lock(BOAT);
-  if(boatsDock->trs[0] == -1){
+  if(boatsDock->trs[0].id == -1){
     printf("Coucou du dock bateau 0\n");
-    boatsDock->trs[0] = t->id;
+    boatsDock->trs[0].id = t->id;
+    boatsDock->trs[0].tid = pthread_self();
+    boatsDock->trs[0].dest = t->dest;
     t->pos = 0;
     boatsDock->cont[0] = t->contArray[0];
     boatsDock->cont[1] = t->contArray[1];
     boatsDock->cont[2] = t->contArray[2];
   }else{
-    boatsDock->trs[1] = t->id;
+    boatsDock->trs[1].id = t->id;
+    boatsDock->trs[1].tid = pthread_self();
+    boatsDock->trs[1].dest = t->dest;
     t->pos = 1;
     boatsDock->cont[3] = t->contArray[0];
     boatsDock->cont[4] = t->contArray[1];
@@ -109,11 +114,11 @@ void boat(transport *t){
 
 
   //Waiting for whatever is telling the boat to leave
-  sleep(3);
+  pause();
 
   //removing itself from shared mem
   lock(BOAT);
-  boatsDock->trs[t->pos] = -1;
+  boatsDock->trs[t->pos].id = -1;
   t->contArray[0] = boatsDock->cont[t->pos * 3];
   t->contArray[1] = boatsDock->cont[(t->pos * 3)+1];
   t->contArray[2] = boatsDock->cont[(t->pos * 3)+2];
@@ -135,6 +140,7 @@ void boat(transport *t){
 
   //Mettre le tout dans une boucle while
   //libérer le malloc fait précédemment
+  free(t->contArray);
   free(t);
 }
 
@@ -149,7 +155,7 @@ void truck(transport *t){
   unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
-  sigaction(SIGINT, &unpauseSigaction, NULL);
+  sigaction(SIGUSR1, &unpauseSigaction, NULL);
 
   //get the pointer to the struct
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
@@ -175,7 +181,9 @@ void truck(transport *t){
   pthread_mutex_unlock(&truckMutex);
 
   lock(TRUCK);
-  trucksDock->trs[t->pos] = t->id; 
+  trucksDock->trs[t->pos].id = t->id;
+  trucksDock->trs[t->pos].tid = pthread_self(); 
+  trucksDock->trs[t->pos].dest = t->dest; 
   trucksDock->cont[t->pos] = *(t->contArray);
   unlock(TRUCK);
 
@@ -194,12 +202,14 @@ void truck(transport *t){
 
 
     lock(TRUCK);
-    trucksDock->trs[t->pos] = -1;
+    trucksDock->trs[t->pos].id = -1;
     if(t->pos == 0){
       pthread_cond_signal(&truckWaitingQueue);
     }
     t->pos++;
-    trucksDock->trs[t->pos] = t->id;
+    trucksDock->trs[t->pos].id = t->id;
+    trucksDock->trs[t->pos].tid = pthread_self();
+    trucksDock->trs[t->pos].dest = t->dest;
     trucksDock->cont[t->pos] = trucksDock->cont[t->pos - 1];
     trucksDock->cont[t->pos - 1] = nullContainer;
     unlock(TRUCK);
@@ -208,7 +218,7 @@ void truck(transport *t){
     pthread_mutex_lock(&mutexTruckTurn);
     truckTurn--;
     lock(TRUCK);
-    while(trucksDock->trs[truckTurn] == -1 && truckTurn!=0){
+    while(trucksDock->trs[truckTurn].id == -1 && truckTurn!=0){
       truckTurn--;
     } 
     unlock(TRUCK);
@@ -216,7 +226,7 @@ void truck(transport *t){
   }
 
   //waiting to get order to move forward
-  sleep(3);
+  pause();
 
   pthread_mutex_lock(&truckMutex);
   nTrucks--;
@@ -227,7 +237,7 @@ void truck(transport *t){
   pthread_mutex_unlock(&mutexTruckTurn);
 
   lock(TRUCK);
-  trucksDock->trs[t->pos] = -1;
+  trucksDock->trs[t->pos].id = -1;
   *(t->contArray) = trucksDock->cont[t->pos];
   trucksDock->cont[t->pos] = nullContainer;
   unlock(TRUCK);
@@ -236,6 +246,8 @@ void truck(transport *t){
   printf("[TRUCK %d]= Leaving with  container %d\n", t->id, t->contArray->id);
 
   pthread_cond_broadcast(&truckAdv);
+
+  free(t->contArray);
   free(t);
 }
 
@@ -247,7 +259,7 @@ void train(transport *t){
   unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
-  sigaction(SIGINT, &unpauseSigaction, NULL);
+  sigaction(SIGUSR1, &unpauseSigaction, NULL);
 
   //get the pointer to the struct
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
@@ -276,7 +288,9 @@ void train(transport *t){
   pthread_mutex_unlock(&trainMutex);
   
   lock(TRAIN);
-  trainDock->trs[t->pos] = t->id;
+  trainDock->trs[t->pos].id = t->id;
+  trainDock->trs[t->pos].tid = pthread_self();
+  trainDock->trs[t->pos].dest = t->dest;
   for(int i=0; i<5;i++){
     trainDock->cont[((t->pos)*5)+i] = t->contArray[i];
   }
@@ -287,12 +301,14 @@ void train(transport *t){
     pthread_cond_wait(&trainsAdv, &advTrainMutex);
     pthread_mutex_unlock(&advTrainMutex);
     lock(TRAIN);
-    trainDock->trs[t->pos] = -1;
+    trainDock->trs[t->pos].id = -1;
     if(t->pos == 0){
       pthread_cond_signal(&trainWaitingQueue);
     }
     t->pos++;
-    trainDock->trs[t->pos] = t->id;
+    trainDock->trs[t->pos].id = t->id;
+    trainDock->trs[t->pos].tid = pthread_self();
+    trainDock->trs[t->pos].id = t->dest;
     for(int i=0; i<5;i++){
       trainDock->cont[(t->pos *5)+i] = trainDock->cont[((t->pos -1)*5)+i];
       trainDock->cont[((t->pos -1)*5)+i] = nullContainer;
@@ -302,14 +318,14 @@ void train(transport *t){
   }
 
   //waiting to get order to move forward
-  sleep(3);
+  pause();
 
   pthread_mutex_lock(&trainMutex);
   nTrains--;
   pthread_mutex_unlock(&trainMutex);
 
   lock(TRAIN);
-  trainDock->trs[t->pos] = -1;
+  trainDock->trs[t->pos].id = -1;
   for(int i=0; i<5;i++){
     t->contArray[i] = trainDock->cont[((t->pos)*5)+i];
     trainDock->cont[((t->pos)*5)+i] = nullContainer;
@@ -320,6 +336,8 @@ void train(transport *t){
    printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
   pthread_cond_broadcast(&trainsAdv);
+
+  free(t->contArray);
   free(t);
   
 }

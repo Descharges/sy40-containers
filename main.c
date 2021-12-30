@@ -1,8 +1,9 @@
 #include "main.h"
 #include "transportGeneration.h"
 #include "transport.h"
+#include "crane.h"
 
-
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -28,9 +29,26 @@ int main(){
 
   genCrane();
   genTerrain();
+
   genInitialTransport(docks);
 
   genTransport();
+
+
+
+  //For testing purposes only
+  generateTrucks();
+  sleep(2);
+  lock(FULL);
+  pickAndPlace('T', 8, 'T', 9, docks);
+  pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
+  unlock(FULL);
+  sleep(10);
+
+
+
+
+
   return 0;
 }
 
@@ -107,11 +125,11 @@ void genInitialTransport(Docks* docks){
   //===Generate vehicles
   //Initialize shared memory
   for(int i = 0 ; i<NB_OF_TRUCKS ; i++)
-      docks->trucksSharedDock.trs[i] = -1;
+      docks->trucksSharedDock.trs[i].id = -1;
   for(int i = 0 ; i<NB_OF_TRAINS ; i++)
-    docks->trainSharedDock.trs[i] = -1;
+    docks->trainSharedDock.trs[i].id = -1;
   for(int i = 0 ; i<NB_OF_BOATS ; i++)
-      docks->boatSharedDock.trs[i] = -1;
+      docks->boatSharedDock.trs[i].id = -1;
   
   
   //We will generate on the docks half empty and half filled vehicles
@@ -119,7 +137,7 @@ void genInitialTransport(Docks* docks){
   int currentDockPlacesTaken = 0;
   int randomPercentage = 0;
   int randomDestinationNo = 0;
-
+  
   //Probability which work perfectly with 5 cont for train, 3 for boat and 1 for truck
   double trainProbability = 100*3/23;
   double truckProbability = 100*15/23;
@@ -150,9 +168,11 @@ void genInitialTransport(Docks* docks){
   //===We generate half dock of empty vehicles
   for(int i = 0 ; i<3 ; i++){
 
+
     transport* transportToGenerate = malloc(sizeof(transport));
     randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
     printf("random dest no : %d\n", randomDestinationNo);
+
     transportToGenerate->dest = destinations[randomDestinationNo];
     transportToGenerate->shmid = getShmid();
     transportToGenerate->id = incrementingId;
@@ -173,6 +193,7 @@ void genInitialTransport(Docks* docks){
    
     }else{
      //Train
+
       transportToGenerate->type = 't';
       container *emptyTrainContArray = malloc(sizeof(container)*5);
       for(int i = 0 ; i<5 ; i++){
@@ -187,17 +208,13 @@ void genInitialTransport(Docks* docks){
     }
     
    if (pthread_create(thread+i, &thread_attr,(void *) transportFunc, transportToGenerate) != 0)
+
       perror("Erreur Creation thread");
     incrementingId++;
     
     
   }
   
-
-
-
-
-
   
   sleep(1);
   int *inequality = malloc(2*sizeof(int));
@@ -263,7 +280,7 @@ void genInitialTransport(Docks* docks){
     incrementingId++;
 
   }
-
+ 
   sleep(1);
   printShmem(getShmid());
 

@@ -1,3 +1,6 @@
+#ifndef CRANE
+#define CRANE 1
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +11,10 @@
 #include "docks.h"
 
 typedef struct Crane{
-  Docks* shmem;
   int id;
-  int container;
+  int shmid;
 }Crane;
+
+void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem);
+void crane(Crane* c);
+#endif
