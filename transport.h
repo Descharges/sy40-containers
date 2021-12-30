@@ -21,11 +21,11 @@ typedef struct transport{
 }transport;
 
 typedef struct trsInfo{
-  pthread_t tid;
   long type;
+  pthread_t tid;
   int id;
   char dest;
-  char typeVehicle;
+  char vehicleType;
 }trsInfo;
 
 

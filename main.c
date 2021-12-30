@@ -79,8 +79,7 @@ int * getDockInequality(int containerDispositions[26]) {
       caseNb = i;
     }
   }
-  
-  printf("coucou de inequality\n");
+
 
   if(caseNb == -1){
     return NULL;
@@ -174,7 +173,6 @@ void genInitialTransport(Docks* docks){
 
     transport* transportToGenerate = malloc(sizeof(transport));
     randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
-    printf("random dest no : %d\n", randomDestinationNo);
 
     transportToGenerate->dest = destinations[randomDestinationNo];
     transportToGenerate->shmid = getShmid();
@@ -388,7 +386,6 @@ void genTransport(){
 
       transport* transportToGenerate = malloc(sizeof(transport));
       randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
-      printf("random dest no : %d\n", randomDestinationNo);
 
       transportToGenerate->dest = destinations[randomDestinationNo];
       transportToGenerate->shmid = getShmid();
@@ -421,7 +418,14 @@ void genTransport(){
         container *filledTruckContArray = malloc(sizeof(container)*1);
         filledTruckContArray[0].id = incrementingContainerId;
         incrementingContainerId++;
-        filledTruckContArray[0].dest = destinations[inequality[1]];
+        if(inequality == NULL){
+          //Generate free places
+          filledTruckContArray[0].dest = -1; 
+          }else{
+            //Generate containers
+            filledTruckContArray[0].dest = destinations[inequality[1]];
+          }
+        
 
         transportToGenerate->contArray = filledTruckContArray;
       }else{
@@ -432,10 +436,17 @@ void genTransport(){
         for(int j = 0 ; j<5 ; j++){
           filledTrainContArray[j].id = incrementingContainerId;
           incrementingContainerId++;
-          filledTrainContArray[j].dest = destinations[inequality[1]];
+          if(inequality == NULL){
+          //Generate free places
+          filledTrainContArray[j].dest = -1;
+          }else{
+            //Generate containers
+            filledTrainContArray[j].dest = destinations[inequality[1]];
+          }
+          
         }
 
-          transportToGenerate->contArray = filledTrainContArray;
+        transportToGenerate->contArray = filledTrainContArray;
       
       }
       
