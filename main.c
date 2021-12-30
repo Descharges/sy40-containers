@@ -3,6 +3,7 @@
 #include "transport.h"
 #include "crane.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,10 +31,19 @@ int main(){
   genTerrain();
   //genTransport(docks);
 
-  generateTrucks();
 
+  //For testing purposes only
+  generateTrucks();
+  sleep(2);
+  lock(FULL);
+  pickAndPlace('T', 8, 'T', 9, docks);
+  pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
+  unlock(FULL);
   sleep(10);
-  pickAndPlace('T', 9, 0, 0, docks);
+
+
+
+
 
   
   return 0;
@@ -100,11 +110,11 @@ void genTransport(Docks* docks){
   //===Generate vehicles
   //Initialize shared memory
   for(int i = 0 ; i<NB_OF_TRUCKS ; i++)
-      docks->trucksSharedDock.trs[i] = -1;
+      docks->trucksSharedDock.trs[i].id = -1;
   for(int i = 0 ; i<NB_OF_TRAINS ; i++)
-    docks->trainSharedDock.trs[i] = -1;
+    docks->trainSharedDock.trs[i].id = -1;
   for(int i = 0 ; i<NB_OF_BOATS ; i++)
-      docks->boatSharedDock.trs[i] = -1;
+      docks->boatSharedDock.trs[i].id = -1;
   
   
   //We will generate on the docks half empty and half filled vehicles
@@ -183,6 +193,7 @@ void genTransport(Docks* docks){
     }
     
    if (pthread_create(thread+i, &thread_attr,(void *) transportFunc, transportToGenerate) != 0)
+
       perror("Erreur Creation thread");
     incrementingId++;
     

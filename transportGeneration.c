@@ -1,5 +1,6 @@
 #include "transportGeneration.h"
 #include "transport.h"
+#include "docks.h"
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -11,11 +12,6 @@
 
 #define TOTAL_NUMBER_OF_BOATS 4//For TEST purpose, it should be unlimited
 #define TOTAL_NUMBER_OF_BOATS 4//For TEST purpose, it should be unlimited
-
-
-void crane(){
-
-}
 
 //For TEST purpose
 void generateTrains(){

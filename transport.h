@@ -5,9 +5,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 #ifndef TRANSPORT
 #define TRANSPORT 1
-#include "docks.h"
+#include "container.h"
 
 //Structure to define transportation method
 typedef struct transport{
@@ -18,6 +19,12 @@ typedef struct transport{
   int pos;
   int shmid;
 }transport;
+
+typedef struct trsInfo{
+  pthread_t tid;
+  int id;
+  char dest;
+}trsInfo;
 
 
 void transportFunc(transport *t);//function to associate one function to each type

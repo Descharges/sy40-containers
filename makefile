@@ -16,6 +16,8 @@ main.o: main.c
 transport.o: transport.c
 	$(CC) $(FLAGS) transport.c
 
+run: clean
+	clear && ./$(OUT)
 
 clean: all
 	rm -f $(OBJS)

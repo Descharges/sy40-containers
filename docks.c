@@ -22,7 +22,7 @@ void printShmem(int shmid){
   printf("Appercu dock :\n");
   printf("Trucks:\n");
   for (int i=0; i<NB_OF_TRUCKS; i++){
-    printf("[%d]",shmem->trucksSharedDock.trs[i]);
+    printf("[%d]",shmem->trucksSharedDock.trs[i].id);
   }
   printf("\n");
 
@@ -34,7 +34,7 @@ void printShmem(int shmid){
 
   printf("Boat:\n");
   for (int i=0; i<NB_OF_BOATS; i++){
-    printf("[%d]",shmem->boatSharedDock.trs[i]);
+    printf("[%d]",shmem->boatSharedDock.trs[i].id);
   }
   printf("\n");
 
@@ -46,7 +46,7 @@ void printShmem(int shmid){
 
   printf("Train:\n");
   for (int i=0; i<NB_OF_TRAINS; i++){
-    printf("[%d]",shmem->trainSharedDock.trs[i]);
+    printf("[%d]",shmem->trainSharedDock.trs[i].id);
   }
   printf("\n");
 

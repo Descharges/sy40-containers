@@ -10,6 +10,7 @@
 #define DOCKS 1
 
 #include "container.h"
+#include "transport.h"
 
 #define TRAIN 1
 #define TRUCK 2
@@ -26,17 +27,17 @@
 
 typedef struct Dtrucks{
   container cont[NB_CONTAINER_TRUCK];
-  int trs[NB_OF_TRUCKS];
+  trsInfo trs[NB_OF_TRUCKS];
 }Dtrucks;
 
 typedef struct Dtrains{
   container cont[NB_CONTAINER_TRAIN];
-  int trs[NB_OF_TRAINS];
+  trsInfo trs[NB_OF_TRAINS];
 }Dtrains;
 
 typedef struct Dboats{
   container cont[NB_CONTAINER_BOAT];
-  int trs[NB_OF_BOATS];
+  trsInfo trs[NB_OF_BOATS];
 }Dboats;
 
 typedef struct Docks{
