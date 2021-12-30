@@ -101,10 +101,10 @@ void generateBoats(){
 
 void generateTrucks(){
 
-    pthread_t thread[20];
+    pthread_t thread[2];
 
     //Train thread creation
-    for(int  i = 0 ; i<20 ; i++){//Finite loop for TEST purpose
+    for(int  i = 0 ; i<2 ; i++){//Finite loop for TEST purpose
         fflush(stdout);
         transport* t = malloc(sizeof(transport));
 
@@ -114,7 +114,7 @@ void generateTrucks(){
         t->id = i+1;
         t->dest = 'A';
         t->shmid = getShmid();
-        c->id = i+1;
+        c->id = i-1;
         c->dest = 'A';
         t->contArray = c;
 
@@ -129,7 +129,7 @@ void generateTrucks(){
 
 
     //Train thread destruction
-    for(int i=0;i<20;i++){
-        pthread_join(thread[i],NULL);
-    }
+    //for(int i=0;i<2;i++){
+    //    pthread_join(thread[i],NULL);
+    //}
 }

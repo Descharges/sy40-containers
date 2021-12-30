@@ -49,7 +49,8 @@ void transportFunc(transport* t){
 
 void sigHandler(int signo){
   printf("=========Signal handler triggered\n");
-  }
+  exit(0);
+}
 
 void boat(transport *t){
 
@@ -130,6 +131,7 @@ void boat(transport *t){
 
   //Mettre le tout dans une boucle while
   //libérer le malloc fait précédemment
+  free(t->contArray);
   free(t);
 }
 
@@ -206,7 +208,7 @@ void truck(transport *t){
   }
 
   //waiting to get order to move forward
-  sleep(3);
+  sleep(60);
 
   pthread_mutex_lock(&truckMutex);
   nTrucks--;
@@ -226,6 +228,8 @@ void truck(transport *t){
   printf("[TRUCK %d]Leaving with  container %d\n", t->id, t->contArray->id);
 
   pthread_cond_broadcast(&truckAdv);
+
+  free(t->contArray);
   free(t);
 }
 
@@ -303,5 +307,7 @@ void train(transport *t){
    printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
   pthread_cond_broadcast(&trainsAdv);
+
+  free(t->contArray);
   free(t);
 }

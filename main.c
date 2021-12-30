@@ -2,6 +2,7 @@
 #include "transportGeneration.h"
 #include "docks.h"
 #include "transport.h"
+#include "crane.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -28,7 +29,14 @@ int main(){
 
   genCrane();
   genTerrain();
-  genTransport(docks);
+  //genTransport(docks);
+
+  generateTrucks();
+
+  sleep(10);
+  pickAndPlace('T', 9, 0, 0, docks);
+
+  
   return 0;
 }
 

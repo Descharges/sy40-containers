@@ -11,8 +11,9 @@
 #include "docks.h"
 
 typedef struct Crane{
-  Docks* shmem;
   int id;
-  int container;
+  int shmid;
 }Crane;
+
+void pickAndPlace(char trs1, int x1, char trs2, char int2, Docks* shmem);
 #endif
