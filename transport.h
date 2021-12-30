@@ -22,8 +22,10 @@ typedef struct transport{
 
 typedef struct trsInfo{
   pthread_t tid;
+  long type;
   int id;
   char dest;
+  char typeVehicle;
 }trsInfo;
 
 
