@@ -22,24 +22,42 @@ int main(){
   //create the shared memory struct
   shmemInit();
   Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
-  memset(docks, -1, sizeof(Docks));
+  
+  for(int i = 0 ; i<NB_OF_TRUCKS ; i++)
+      docks->trucksSharedDock.trs[i].id = -1;
+  for(int i = 0 ; i<NB_OF_TRAINS ; i++)
+    docks->trainSharedDock.trs[i].id = -1;
+  for(int i = 0 ; i<NB_OF_BOATS ; i++)
+      docks->boatSharedDock.trs[i].id = -1;
+  
+  for(int i = 0 ; i<10 ; i++)
+      docks->trucksSharedDock.cont[i].id = -1;
+  for(int i = 0 ; i<10 ; i++)
+    docks->trainSharedDock.cont[i].id = -1;
+  for(int i = 0 ; i<6; i++)
+      docks->boatSharedDock.cont[i].id = -1;
+  
+  printf("[CONTROL] Shared memory allocated\n");
 
 
-  printShmem(getShmid());
-
-  genCrane();
-  genTerrain();
   //genTransport(docks);
 
 
   //For testing purposes only
   generateTrucks();
-  sleep(2);
-  lock(FULL);
-  pickAndPlace('T', 8, 'T', 9, docks);
-  pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
-  unlock(FULL);
-  sleep(10);
+  printf("[CONTROL] Transports threads created\n");
+
+  pthread_t crane;
+  Crane* c = malloc(sizeof(Crane));
+  c->id = 1;
+  c->shmid = getShmid();
+  pthread_create(&crane, 0,(void*)craneFunc, c);
+  printf("[CONTROL] Crane thread created\n");
+
+  while(1){}
+   
+
+
 
 
 
@@ -48,16 +66,6 @@ int main(){
   
   return 0;
 }
-
-void genCrane(){
-
-
-}
-
-void genTerrain(){
-  printf("Terrain generated with TID=%d\n",2);
-}
-
 
 
 //Return the biggest amount of missing container or missing places on dock(r[0]) and its corresponding destination(r[1])

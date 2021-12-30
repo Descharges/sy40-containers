@@ -22,39 +22,39 @@ void printShmem(int shmid){
   printf("Appercu dock :\n");
   printf("Trucks:\n");
   for (int i=0; i<NB_OF_TRUCKS; i++){
-    printf("[%d]",shmem->trucksSharedDock.trs[i].id);
+    printf("[%d/%c]",shmem->trucksSharedDock.trs[i].id,shmem->trucksSharedDock.trs[i].dest);
   }
   printf("\n");
 
   printf("Trucks container:\n");
   for (int i=0; i<NB_CONTAINER_TRUCK; i++){
-    printf("[%d]",shmem->trucksSharedDock.cont[i].id);
+    printf("[%d/%c]",shmem->trucksSharedDock.cont[i].id,shmem->trucksSharedDock.cont[i].dest);
   }
   printf("\n");
 
   printf("Boat:\n");
   for (int i=0; i<NB_OF_BOATS; i++){
-    printf("[%d]",shmem->boatSharedDock.trs[i].id);
+    printf("[%d/%c]",shmem->boatSharedDock.trs[i].id,shmem->boatSharedDock.trs[i].dest);
   }
   printf("\n");
 
   printf("Boat container:\n");
   for (int i=0; i<NB_CONTAINER_BOAT; i++){
-    printf("[%d]",shmem->boatSharedDock.cont[i].id);
+    printf("[%d/%c]",shmem->boatSharedDock.cont[i].id,shmem->boatSharedDock.cont[i].dest);
   }
   printf("\n");
 
   printf("Train:\n");
   for (int i=0; i<NB_OF_TRAINS; i++){
-    printf("[%d]",shmem->trainSharedDock.trs[i].id);
+    printf("[%d/%c]",shmem->trainSharedDock.trs[i].id,shmem->trainSharedDock.trs[i].dest);
   }
   printf("\n");
 
   printf("Train container:\n");
   for (int i=0; i<NB_CONTAINER_TRAIN; i++){
-    printf("[%d]",shmem->trainSharedDock.cont[i].id);
+    printf("[%d/%c]",shmem->trainSharedDock.cont[i].id,shmem->trainSharedDock.cont[i].dest);
   }
-  printf("\n");
+  printf("\n\n");
 
 }
 
