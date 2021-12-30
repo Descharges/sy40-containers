@@ -135,9 +135,11 @@ void genTransport(Docks* docks){
   //===We generate half dock of empty vehicles
   for(int i = 0 ; i<3 ; i++){
 
+
     transport* transportToGenerate = malloc(sizeof(transport));
     randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
     printf("random dest no : %d\n", randomDestinationNo);
+
     transportToGenerate->dest = destinations[randomDestinationNo];
     transportToGenerate->shmid = getShmid();
     transportToGenerate->id = incrementingId;
@@ -158,6 +160,7 @@ void genTransport(Docks* docks){
    
     }else{
      //Train
+
       transportToGenerate->type = 't';
       container *emptyTrainContArray = malloc(sizeof(container)*5);
       for(int i = 0 ; i<5 ; i++){
@@ -178,11 +181,6 @@ void genTransport(Docks* docks){
     
   }
   
-
-
-
-
-
   
   sleep(1);
   int *inequality = malloc(2*sizeof(int));
@@ -248,7 +246,7 @@ void genTransport(Docks* docks){
     incrementingId++;
 
   }
-
+ 
   sleep(1);
   printShmem(getShmid());
 
