@@ -32,12 +32,6 @@ void printShmem(int shmid){
     printf("[%d/%c]",shmem->trucksSharedDock.cont[i].id,shmem->trucksSharedDock.cont[i].dest);
   }
   printf("\n");
-  for (int i=0; i<NB_CONTAINER_TRUCK; i++){
-    printf("[%c]",shmem->trucksSharedDock.cont[i].dest);
-    if(shmem->trucksSharedDock.cont[i].id>9 || shmem->trucksSharedDock.cont[i].id<0)
-      printf(" ");
-  }
-  printf("\n");
 
   printf("---\n");
   printf("Boat:\n");
@@ -49,12 +43,6 @@ void printShmem(int shmid){
   printf("Boat container:\n");
   for (int i=0; i<NB_CONTAINER_BOAT; i++){
     printf("[%d/%c]",shmem->boatSharedDock.cont[i].id,shmem->boatSharedDock.cont[i].dest);
-  }
-  printf("\n");
-  for (int i=0; i<NB_CONTAINER_BOAT; i++){
-    printf("[%c]",shmem->boatSharedDock.cont[i].dest);
-    if(shmem->boatSharedDock.cont[i].id>9 || shmem->boatSharedDock.cont[i].id<0)
-      printf(" ");
   }
   printf("\n");
 

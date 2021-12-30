@@ -71,14 +71,14 @@ void boat(transport *t){
 
 
   do{
-    printf("[BOAT %d]arriving...\n", t->id);
+    //printf("[BOAT %d]arriving...\n", t->id);
 
     //If there is no room available on the docks, come in the waiting queue
 
     //Accessing the dock using nBoats variable
     pthread_mutex_lock(&boatMutex);
     if (nBoats >= 2){
-      printf("[BOAT %d]Waiting to enter docks...\n",t->id);
+      //printf("[BOAT %d]Waiting to enter docks...\n",t->id);
       pthread_cond_wait(&boatWaitingQueue,&boatMutex);
     }
      if(t->contArray->dest != -1){
@@ -93,7 +93,7 @@ void boat(transport *t){
     //setting itself up in shared memory
     lock(BOAT);
     if(boatsDock->trs[0].id == -1){
-      printf("Coucou du dock bateau 0\n");
+      //printf("Coucou du dock bateau 0\n");
       boatsDock->trs[0].id = t->id;
       boatsDock->trs[0].tid = pthread_self();
       boatsDock->trs[0].dest = t->dest;
@@ -161,11 +161,11 @@ void truck(transport *t){
   Dtrucks *trucksDock = &(docks->trucksSharedDock);
 
   do{
-    printf("[TRUCK %d]= Arriving...\n", t->id);
+    //printf("[TRUCK %d]= Arriving...\n", t->id);
 
     pthread_mutex_lock(&truckMutex);
     if (nTrucks >= 10){
-      printf("[TRUCK %d]= Waiting to enter docks...\n",t->id);
+      //printf("[TRUCK %d]= Waiting to enter docks...\n",t->id);
       pthread_cond_wait(&truckWaitingQueue,&truckMutex);
       t->pos = 9-nTrucks;
     }else{
@@ -213,7 +213,7 @@ void truck(transport *t){
       trucksDock->cont[t->pos] = trucksDock->cont[t->pos - 1];
       trucksDock->cont[t->pos - 1] = nullContainer;
       unlock(TRUCK);
-      printf("[TRUCK %d]= Moving forward to pos %d\n", t->id, t->pos);
+      //printf("[TRUCK %d]= Moving forward to pos %d\n", t->id, t->pos);
 
       pthread_mutex_lock(&mutexTruckTurn);
       truckTurn--;
@@ -244,7 +244,7 @@ void truck(transport *t){
 
     pthread_cond_broadcast(&truckAdv);
 
-  }while(t->dest != t->contArray->dest);
+  }while(t->dest != t->contArray->dest );
 
   printf("[TRUCK %d]= Leaving with  container %d\n", t->id, t->contArray->id);
   free(t->contArray);
@@ -265,11 +265,11 @@ void train(transport *t){
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
   Dtrains *trainDock = &(docks->trainSharedDock);
 
-  printf("[TRAIN %d]arriving...\n", t->id);
+  //printf("[TRAIN %d]arriving...\n", t->id);
 
   pthread_mutex_lock(&trainMutex);
   if (nTrains >= 2){
-    printf("[TRAIN %d]Waiting to enter docks...\n",t->id);
+    //printf("[TRAIN %d]Waiting to enter docks...\n",t->id);
     pthread_cond_wait(&trainWaitingQueue,&trainMutex);
     t->pos = 1-nTrains;
   }else{
@@ -314,7 +314,7 @@ void train(transport *t){
       trainDock->cont[((t->pos -1)*5)+i] = nullContainer;
     }
     unlock(TRAIN);
-    printf("[TRAIN %d]Moving forward to pos %d\n", t->id, t->pos);
+    //printf("[TRAIN %d]Moving forward to pos %d\n", t->id, t->pos);
   }
 
   //waiting to get order to move forward
@@ -333,7 +333,7 @@ void train(transport *t){
   
   unlock(TRAIN);
 
-   printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
+  printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
   pthread_cond_broadcast(&trainsAdv);
 
