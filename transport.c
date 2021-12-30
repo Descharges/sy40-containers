@@ -59,7 +59,7 @@ void boat(transport *t){
 
   //Set the interupt action
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);
@@ -141,7 +141,7 @@ void truck(transport *t){
 
   //Set sigaction
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);
@@ -235,7 +235,7 @@ void train(transport *t){
 
   //Set sigaction
   struct sigaction unpauseSigaction;
-  unpauseSigaction.sa_handler = sig_handler;
+  unpauseSigaction.sa_handler = sigHandler;
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGINT, &unpauseSigaction, NULL);

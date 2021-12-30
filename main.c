@@ -1,6 +1,7 @@
 #include "main.h"
 #include "transportGeneration.h"
 #include "docks.h"
+#include "transport.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -84,11 +85,11 @@ void genTransport(Docks* docks){
   //===Generate vehicles
   //Initialize shared memory
   for(int i = 0 ; i<NB_OF_TRUCKS ; i++)
-      docks->truckDock->trs[i] = -1;
+      docks->trucksSharedDock.trs[i] = -1;
   for(int i = 0 ; i<NB_OF_TRAINS ; i++)
-    docks->trainDock->trs[i] = -1;
+    docks->trainSharedDock.trs[i] = -1;
   for(int i = 0 ; i<NB_OF_BOATS ; i++)
-      docks->boatDock->trs[i] = -1;
+      docks->boatSharedDock.trs[i] = -1;
   
   
   //Generate on the docks half empty and half filled vehicles, randomly
@@ -114,7 +115,7 @@ void genTransport(Docks* docks){
 
     randomPercentage = rand()%100 +1;
 
-    transport* transportToGenerate = malloc(sizeof(transport));
+    transport *transportToGenerate = malloc(sizeof(transport));
     transportToGenerate->contArray = NULL;
     randomDestinationNo = rand() % (sizeof(destinations)/sizeof(destinations[0]));
     transportToGenerate->dest = destinations[randomDestinationNo];
@@ -123,7 +124,7 @@ void genTransport(Docks* docks){
     //Generate randomly a vehicle with probability depending on the number of its container
     if(randomPercentage < trainProbability){
       //Train
-      transportToGenerate->shmem.trainDock = docks->trainDock;
+      transportToGenerate->shmid = getShmid();
       transportToGenerate->type = 't';
       nbOfVehiclesGenerated[1]++;
       currentDockPlacesTaken+=nbOfContainerPerTrain;
@@ -131,7 +132,7 @@ void genTransport(Docks* docks){
 
     }else if(randomPercentage < trainProbability + truckProbability && randomPercentage > trainProbability){
       //Truck
-      transportToGenerate->shmem.truckDock = docks->truckDock;
+      transportToGenerate->shmid = getShmid();
       transportToGenerate->type = 'T';
       nbOfVehiclesGenerated[0]++;
       currentDockPlacesTaken+=nbOfContainerPerTruck;
@@ -139,7 +140,7 @@ void genTransport(Docks* docks){
 
     }else{
       //Boat
-      transportToGenerate->shmem.boatDock = docks->boatDock;
+      transportToGenerate->shmid = getShmid();
       transportToGenerate->type = 'b';
       nbOfVehiclesGenerated[2]++;
       currentDockPlacesTaken+=nbOfContainerPerBoat;

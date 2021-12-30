@@ -5,6 +5,10 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <stdlib.h>
+
+#ifndef DOCKS
+#define DOCKS 1
+
 #include "container.h"
 
 #define TRAIN 1
@@ -36,7 +40,6 @@ typedef struct Dboats{
 }Dboats;
 
 typedef struct Docks{
-  
   Dtrains trainSharedDock;
   Dtrucks trucksSharedDock;
   Dboats boatSharedDock;
@@ -51,3 +54,4 @@ void printShmem(int shmid);
 void lock(int arg);
 void unlock(int arg);
 
+#endif
