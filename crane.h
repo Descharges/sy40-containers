@@ -13,7 +13,11 @@
 typedef struct Crane{
   int id;
   int shmid;
-}Crane;
+  pthread_t genTransport;
+  }Crane;
+
+
+
 
 void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem);
 void* craneFunc(Crane* c);

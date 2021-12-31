@@ -49,7 +49,7 @@ void transportFunc(transport* t){
 }
 
 void sigHandler(int signo){
-  printf("[Signal handler triggered]\n");
+  ;
 }
 
 void boat(transport *t){
@@ -81,8 +81,8 @@ void boat(transport *t){
       //printf("[BOAT %d]Waiting to enter docks...\n",t->id);
       pthread_cond_wait(&boatWaitingQueue,&boatMutex);
     }
-     if(t->contArray->dest != -1){
-      printf("[BOAT %d to %c] Entering the docks with %d,%d,%d to %c\n", t->id, t->dest, t->contArray[0].id,t->contArray[1].id,t->contArray[2].id, t->contArray[0].dest);
+     if(t->contArray->id != -1){
+      printf("[BOAT %d to %c] Entering the doscks with %d,%d,%d to %c\n", t->id, t->dest, t->contArray[0].id,t->contArray[1].id,t->contArray[2].id, t->contArray[0].dest);
     }else{
       printf("[BOAT %d to %c] Entering the docks with %d,%d,%d \n", t->id, t->dest,t->contArray[1].id,t->contArray[2].id, t->contArray[0].dest);
     }
@@ -139,6 +139,7 @@ void boat(transport *t){
 
 
   }while(t->dest!=t->contArray[0].dest && t->dest!=t->contArray[1].dest && t->dest!=t->contArray[2].dest);
+
   free(t->contArray);
   free(t);
 }
@@ -172,7 +173,7 @@ void truck(transport *t){
       t->pos = 9-nTrucks;
     }
     nTrucks++;
-    if(t->contArray->dest != -1){
+    if(t->contArray->id != -1){
       printf("[TRUCK %d to %c]= Entering the docks at pos %d with container %d to %c\n", t->id, t->dest, t->pos, t->contArray->id, t->contArray->dest);
     }else{
       printf("[TRUCK %d to %c]= Entering the docks at pos %d with container %d\n", t->id, t->dest, t->pos, t->contArray->id);
@@ -277,7 +278,7 @@ void train(transport *t){
     t->pos = 1-nTrains;
   }
   nTrains++;
-  if(t->contArray->dest != -1){
+  if(t->contArray->id != -1){
      printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d to %c\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id, t->contArray[0].dest);
   }else{
     printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
@@ -301,14 +302,17 @@ void train(transport *t){
     pthread_cond_wait(&trainsAdv, &advTrainMutex);
     pthread_mutex_unlock(&advTrainMutex);
     lock(TRAIN);
+    
     trainDock->trs[t->pos].id = -1;
     if(t->pos == 0){
       pthread_cond_signal(&trainWaitingQueue);
     }
+
     t->pos++;
     trainDock->trs[t->pos].id = t->id;
     trainDock->trs[t->pos].tid = pthread_self();
-    trainDock->trs[t->pos].id = t->dest;
+    trainDock->trs[t->pos].dest = t->dest;
+
     for(int i=0; i<5;i++){
       trainDock->cont[(t->pos *5)+i] = trainDock->cont[((t->pos -1)*5)+i];
       trainDock->cont[((t->pos -1)*5)+i] = nullContainer;
@@ -319,7 +323,7 @@ void train(transport *t){
 
   //waiting to get order to move forward
   pause();
-
+  sleep(1);
   pthread_mutex_lock(&trainMutex);
   nTrains--;
   pthread_mutex_unlock(&trainMutex);
@@ -335,9 +339,11 @@ void train(transport *t){
 
   printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
-  pthread_cond_broadcast(&trainsAdv);
+  pthread_cond_broadcast(&trainsAdv); 
 
-  free(t->contArray);
-  free(t);
+
+  //Make often crash
+  /*free(t->contArray);
+  free(t);*/
   
 }

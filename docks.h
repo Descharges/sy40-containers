@@ -47,8 +47,10 @@ typedef struct Docks{
 }Docks;
 
 void shmemInit();
+void msgQInit();
 
 int getShmid();
+int getMsgid();
 
 void printShmem(int shmid);
 

@@ -1,6 +1,7 @@
 #include "crane.h"
 #include "docks.h"
 #include "container.h"
+#include <sys/msg.h>
 #include <stdio.h>
 #include <signal.h>
 
@@ -64,6 +65,7 @@ int findMatch(char dest, char* trs, int* index, Docks* docks){
     return -1; 
 }
 
+
 int checkTransport(char trs, int index, Docks* docks){
     switch(trs){
         case 't':
@@ -100,26 +102,26 @@ void* craneFunc(Crane* c){
     int index = -1;
     char trs = 0;
     char dest = 0;
+    int vehicleGone = 0; 
+    trsDest infoMsg; infoMsg.type = 1;
+    int printCounter;
 
     while(1){
-        sleep(5);
+        sleep(1);
 
         lock(FULL);
 
-        printShmem(getShmid());
+ 
+            printShmem(getShmid());
 
-        for (int i=0; i<10; i++) {
-            if(docks->trucksSharedDock.cont[i].id == -1 && findMatch(docks->trucksSharedDock.trs[i].dest,&trs,&index,docks)==0){
-                pickAndPlace(trs, index, 'T', i, docks);
-                printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 'T');
-            }
-        }
-        for (int i=0; i<10; i++) {
+        for (int i=9; i>=0; i--) {
             if(docks->trainSharedDock.cont[i].id == -1 && findMatch(docks->trainSharedDock.trs[i/5].dest,&trs,&index,docks)==0){
                 pickAndPlace(trs, index, 't', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 't');
             }
         }
+
+
         for (int i=0; i<6; i++) {
             if(docks->boatSharedDock.cont[i].id == -1 && findMatch(docks->boatSharedDock.trs[i/3].dest,&trs,&index,docks)==0){
                 pickAndPlace(trs, index, 'b', i, docks);
@@ -127,28 +129,77 @@ void* craneFunc(Crane* c){
             }
         }
 
-        printShmem(getShmid());
+        
+
+        for (int i=0; i<10; i++) {
+            if(docks->trucksSharedDock.cont[i].id == -1 && findMatch(docks->trucksSharedDock.trs[i].dest,&trs,&index,docks)==0){
+                pickAndPlace(trs, index, 'T', i, docks);
+                printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 'T');
+            }
+        }
+        
+        
+      
+  
 
         if(checkTransport('T', 9, docks)==0){
             pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
+            docks->trucksSharedDock.trs[9].dest = 0;
+            vehicleGone = 1;
+            infoMsg.vehicleType = 'T';
+            if (msgsnd(getMsgid(), &infoMsg, sizeof(infoMsg),0) == -1) {
+                    perror("Msgsnd error");
+                    exit(1);
+            }
+        }else{
+            //Will come back in the queue
+            pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
         }
+
 
         if(checkTransport('t', 1, docks)==0){
             pthread_kill(docks->trainSharedDock.trs[1].tid, SIGUSR1);
+            docks->trainSharedDock.trs[1].dest = 0;
+            vehicleGone = 1;
+            infoMsg.vehicleType = 't';
+            if (msgsnd(getMsgid(), &infoMsg, sizeof(infoMsg),0) == -1) {
+                    perror("Msgsnd error");
+                    exit(1);
+            }
         }
 
         if(checkTransport('b', 0, docks)==0){
             pthread_kill(docks->boatSharedDock.trs[0].tid, SIGUSR1);
+            docks->boatSharedDock.trs[0].dest = 0;
+            vehicleGone = 1;
+            infoMsg.vehicleType = 'b';
+            if (msgsnd(getMsgid(), &infoMsg, sizeof(infoMsg),0) == -1) {
+                    perror("Msgsnd error");
+                    exit(1);
+            }
         }
 
         if(checkTransport('b', 1, docks)==0){
             pthread_kill(docks->boatSharedDock.trs[1].tid, SIGUSR1);
+            docks->boatSharedDock.trs[1].dest = 0;
+            vehicleGone = 1;
+            infoMsg.vehicleType = 'b';
+            if (msgsnd(getMsgid(), &infoMsg, sizeof(infoMsg),0) == -1) {
+                    perror("Msgsnd error");
+                    exit(1);
+            }
         }
+        
 
+        if(vehicleGone){
+            //Warn the generator to generate a new transport of the same type as the one gone
+            pthread_kill(c->genTransport, SIGUSR1);
+        }
+            
 
 
         unlock(FULL);
-        
+        vehicleGone = 0;
 
     }
 

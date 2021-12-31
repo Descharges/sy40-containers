@@ -1,20 +1,39 @@
 #include "docks.h"
-
+#include <sys/msg.h>
 
 pthread_mutex_t trainMutexShm = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t truckMutexShm = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t boatMutexShm = PTHREAD_MUTEX_INITIALIZER;
 
 int shmid;
+int msgid;
 
 void shmemInit(){
   printf("Allocating shared memory\n");
   shmid = shmget(IPC_PRIVATE, sizeof(Docks), 0666);
 }
+void msgQInit(){
+    
+  key_t cle;
+  if ((cle = ftok("./", 'A')) == -1) {
+    perror("Erreur de creation de la clé \n");
+    exit(1);
+  }
+
+  if ((msgid = msgget(cle, IPC_CREAT | IPC_EXCL | 0750)) == -1)
+    perror("Pb msgid");
+
+  printf("MSGID :  %d\n", msgid);
+}
 
 int getShmid(){
   return shmid;
 }
+
+int getMsgid(){
+  return msgid;
+}
+
 
 void printShmem(int shmid){
 
