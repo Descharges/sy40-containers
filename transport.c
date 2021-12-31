@@ -339,7 +339,7 @@ void train(transport *t){
 
   printf("[TRAIN %d]Leaving with %d,%d,%d,%d,%d\n", t->id, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
 
-  pthread_cond_broadcast(&trainsAdv);
+  pthread_cond_broadcast(&trainsAdv); 
 
 
   //Make often crash
