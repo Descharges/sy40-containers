@@ -21,16 +21,19 @@ typedef struct transport{
 }transport;
 
 typedef struct trsInfo{
-  long type;
   pthread_t tid;
-  int id;
   char dest;
+  int id;
   char vehicleType;
 }trsInfo;
 
+typedef struct trsDest{
+  long type;
+  char vehicleType;
+}trsDest;
 
 void transportFunc(transport *t);//function to associate one function to each type
-
+void sigHandler(int signo);
 void boat(transport* t);//main function for the boat
 void train(transport *t);//Idem
 void truck(transport* t);//Idem
