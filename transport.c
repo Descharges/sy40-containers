@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
+int end = 0;
 
 //===Mutex to handle the access to the docks
 //Train
@@ -138,7 +139,7 @@ void boat(transport *t){
     printf("[BOAT %d]Leaving the docks with %d,%d,%d\n", t->id,t->contArray[0].id,t->contArray[1].id,t->contArray[2].id);
 
 
-  }while(t->dest!=t->contArray[0].dest && t->dest!=t->contArray[1].dest && t->dest!=t->contArray[2].dest);
+  }while(t->dest!=t->contArray[0].dest && t->dest!=t->contArray[1].dest && t->dest!=t->contArray[2].dest && end==0);
 
   free(t->contArray);
   free(t);
@@ -188,7 +189,7 @@ void truck(transport *t){
     trucksDock->cont[t->pos] = *(t->contArray);
     unlock(TRUCK);
 
-    while (t->pos < 9){
+    while (t->pos < 9 && end==0){
       //wait for the signal to advance
       pthread_mutex_lock(&advMutex);
       pthread_cond_wait(&truckAdv, &advMutex);
@@ -227,7 +228,9 @@ void truck(transport *t){
     }
 
     //waiting to get order to move forward
-    pause();
+    if(end==0){
+      pause();
+    }
 
     pthread_mutex_lock(&truckMutex);
     nTrucks--;
@@ -245,7 +248,7 @@ void truck(transport *t){
 
     pthread_cond_broadcast(&truckAdv);
 
-  }while(t->dest != t->contArray->dest );
+  }while(t->dest != t->contArray->dest && end==0);
 
   printf("[TRUCK %d]= Leaving with  container %d\n", t->id, t->contArray->id);
   free(t->contArray);

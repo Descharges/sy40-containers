@@ -15,6 +15,7 @@
 int incrementingId = 0, incrementingContainerId = 0;
 
 
+
 void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
@@ -50,12 +51,19 @@ int main(){
   //For testing purposes only
   printf("[CONTROL] Transports threads created\n");
 
-  pthread_t crane;
-  Crane* c = malloc(sizeof(Crane));
-  c->id = 1;
-  c->shmid = getShmid();
-  c->genTransport = thread;
-  pthread_create(&crane, 0,(void*)craneFunc, c);
+  pthread_t crane1;
+  Crane* c1 = malloc(sizeof(Crane));
+  c1->id = 0;
+  c1->shmid = getShmid();
+  c1->genTransport = thread;
+  pthread_create(&crane1, 0,(void*)craneFunc, c1);
+
+  pthread_t crane2;
+  Crane* c2 = malloc(sizeof(Crane));
+  c2->id = 1;
+  c2->shmid = getShmid();
+  c2->genTransport = thread;
+  pthread_create(&crane2, 0,(void*)craneFunc, c2);
   printf("[CONTROL] Crane thread created\n");
    
 
@@ -430,7 +438,7 @@ void genTransport(){
       //The transport should not have the same destinations as its containers
       do{
         randomDestinationNo = rand() % NUMBER_OF_DESTINATION;
-      }while(inequality[1] == randomDestinationNo);
+      }while(inequality != NULL && inequality[1] == randomDestinationNo);
 
       transportToGenerate->dest = destinations[randomDestinationNo];
       transportToGenerate->shmid = getShmid();
