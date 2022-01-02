@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 
-
+int end = 0;
 //===Mutex to handle the access to the docks
 //Train
 pthread_cond_t trainWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
@@ -50,6 +50,11 @@ void transportFunc(transport* t){
 
 void sigHandler(int signo){
   ;
+}
+
+void intHandler(int signo){
+  printf("Ending...");
+  end = 1;
 }
 
 void boat(transport *t){
@@ -138,7 +143,7 @@ void boat(transport *t){
     printf("[BOAT %d]Leaving the docks with %d,%d,%d\n", t->id,t->contArray[0].id,t->contArray[1].id,t->contArray[2].id);
 
 
-  }while(t->dest!=t->contArray[0].dest && t->dest!=t->contArray[1].dest && t->dest!=t->contArray[2].dest);
+  }while(t->dest!=t->contArray[0].dest && t->dest!=t->contArray[1].dest && t->dest!=t->contArray[2].dest && end==0);
 
   free(t->contArray);
   free(t);
@@ -156,6 +161,12 @@ void truck(transport *t){
   sigemptyset (&unpauseSigaction.sa_mask);
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGUSR1, &unpauseSigaction, NULL);
+
+  struct sigaction intSigaction;
+  intSigaction.sa_handler = intHandler;
+  sigemptyset (&intSigaction.sa_mask);
+  intSigaction.sa_flags = 0;
+  sigaction(SIGINT, &intSigaction, NULL);
 
   //get the pointer to the struct
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
@@ -188,11 +199,19 @@ void truck(transport *t){
     trucksDock->cont[t->pos] = *(t->contArray);
     unlock(TRUCK);
 
-    while (t->pos < 9){
+    while (t->pos < 9 && end==0){
       //wait for the signal to advance
       pthread_mutex_lock(&advMutex);
       pthread_cond_wait(&truckAdv, &advMutex);
       pthread_mutex_unlock(&advMutex);
+
+      if(end==1){
+        printf("[TRUCK %d]= Interrupting\n",t->id);
+        fflush(stdout);
+        free(t->contArray);
+        free(t);
+        pthread_exit(0);
+      }
 
       
       do{
@@ -227,7 +246,9 @@ void truck(transport *t){
     }
 
     //waiting to get order to move forward
-    pause();
+    if(end==0){
+      pause();
+    }
 
     pthread_mutex_lock(&truckMutex);
     nTrucks--;
@@ -245,7 +266,7 @@ void truck(transport *t){
 
     pthread_cond_broadcast(&truckAdv);
 
-  }while(t->dest != t->contArray->dest );
+  }while(t->dest != t->contArray->dest && end==0);
 
   printf("[TRUCK %d]= Leaving with  container %d\n", t->id, t->contArray->id);
   free(t->contArray);
@@ -278,11 +299,9 @@ void train(transport *t){
     t->pos = 1-nTrains;
   }
   nTrains++;
-  if(t->contArray->id != -1){
-     printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d to %c\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id, t->contArray[0].dest);
-  }else{
-    printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
-  }
+
+  printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
+  fflush(stdout);  
  
   
   
@@ -301,6 +320,14 @@ void train(transport *t){
     pthread_mutex_lock(&advTrainMutex);
     pthread_cond_wait(&trainsAdv, &advTrainMutex);
     pthread_mutex_unlock(&advTrainMutex);
+
+    if (end==1){
+      printf("[TRAIN %d]= Interrupting\n",t->id);
+        fflush(stdout);
+        free(t->contArray);
+        free(t);
+        pthread_exit(0);
+    }
     lock(TRAIN);
     
     trainDock->trs[t->pos].id = -1;
@@ -341,9 +368,7 @@ void train(transport *t){
 
   pthread_cond_broadcast(&trainsAdv); 
 
-
-  //Make often crash
-  /*free(t->contArray);
-  free(t);*/
+  free(t->contArray);
+  free(t);
   
 }

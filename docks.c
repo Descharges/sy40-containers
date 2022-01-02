@@ -10,7 +10,7 @@ int msgid;
 
 void shmemInit(){
   printf("Allocating shared memory\n");
-  shmid = shmget(IPC_PRIVATE, sizeof(Docks), 0666);
+  shmid = shmget(IPC_PRIVATE, sizeof(Docks)+100, 0666);
 }
 void msgQInit(){
     
