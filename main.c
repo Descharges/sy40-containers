@@ -20,6 +20,8 @@ void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
 
+extern int end;
+
 int main(){
   //create the shared memory struct
   shmemInit();
@@ -89,23 +91,17 @@ int main(){
 
     
 
-  while(1){}
+  pthread_join(crane1,NULL);
+  pthread_join(crane1,NULL);
 
-
-
-  //For testing purposes only
- /* generateTrucks();
-  sleep(2);
-  lock(FULL);
-  pickAndPlace('T', 8, 'T', 9, docks);
-  pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
-  unlock(FULL);
-  sleep(10);*/
+  free(c1);
+  free(c2);
 
 
 
 
   msgctl(getMsgid(), IPC_RMID, NULL);
+  shmctl(getShmid(), IPC_RMID, NULL);
 
   return 0;
 }
@@ -330,6 +326,12 @@ void genInitialTransport(Docks* docks){
 
 
 void genTransport(){
+
+  struct sigaction intSigaction;
+  intSigaction.sa_handler = intHandler;
+  sigemptyset (&intSigaction.sa_mask);
+  intSigaction.sa_flags = 0;
+  sigaction(SIGINT, &intSigaction, NULL);
   
   sleep(2);
   char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
@@ -371,6 +373,12 @@ void genTransport(){
   
  while(1){
   pause();
+
+  if (end==1) {
+    //free ici
+    pthread_exit(0);
+  }
+
 
   //=== Get msg from crane to know which vehicle is gone
   //Get ALL waiting msg

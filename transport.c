@@ -6,7 +6,6 @@
 #include <time.h>
 
 int end = 0;
-
 //===Mutex to handle the access to the docks
 //Train
 pthread_cond_t trainWaitingQueue = PTHREAD_COND_INITIALIZER;//For the other trains
@@ -51,6 +50,11 @@ void transportFunc(transport* t){
 
 void sigHandler(int signo){
   ;
+}
+
+void intHandler(int signo){
+  printf("Ending...");
+  end = 1;
 }
 
 void boat(transport *t){
@@ -158,6 +162,12 @@ void truck(transport *t){
   unpauseSigaction.sa_flags = 0;
   sigaction(SIGUSR1, &unpauseSigaction, NULL);
 
+  struct sigaction intSigaction;
+  intSigaction.sa_handler = intHandler;
+  sigemptyset (&intSigaction.sa_mask);
+  intSigaction.sa_flags = 0;
+  sigaction(SIGINT, &intSigaction, NULL);
+
   //get the pointer to the struct
   Docks* docks = (Docks *)shmat(t->shmid, NULL, 0);
   Dtrucks *trucksDock = &(docks->trucksSharedDock);
@@ -194,6 +204,14 @@ void truck(transport *t){
       pthread_mutex_lock(&advMutex);
       pthread_cond_wait(&truckAdv, &advMutex);
       pthread_mutex_unlock(&advMutex);
+
+      if(end==1){
+        printf("[TRUCK %d]= Interrupting\n",t->id);
+        fflush(stdout);
+        free(t->contArray);
+        free(t);
+        pthread_exit(0);
+      }
 
       
       do{
@@ -302,6 +320,14 @@ void train(transport *t){
     pthread_mutex_lock(&advTrainMutex);
     pthread_cond_wait(&trainsAdv, &advTrainMutex);
     pthread_mutex_unlock(&advTrainMutex);
+
+    if (end==1){
+      printf("[TRAIN %d]= Interrupting\n",t->id);
+        fflush(stdout);
+        free(t->contArray);
+        free(t);
+        pthread_exit(0);
+    }
     lock(TRAIN);
     
     trainDock->trs[t->pos].id = -1;
@@ -342,9 +368,7 @@ void train(transport *t){
 
   pthread_cond_broadcast(&trainsAdv); 
 
-
-  //Make often crash
-  /*free(t->contArray);
-  free(t);*/
+  free(t->contArray);
+  free(t);
   
 }

@@ -10,6 +10,7 @@ pthread_cond_t nextCrane = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t nextCraneMut = PTHREAD_MUTEX_INITIALIZER;
 
 extern int end;
+int cleaned = 0;
 
 void sigintHandler(int signo){
     end = 1;
@@ -139,12 +140,11 @@ void* craneFunc(Crane* c){
 
         lock(FULL);
 
-            //printf("\e[1;1H\e[2J");
-            printf("[CRANE ID=%d]Starting to operate",c->id);
+            printf("\n\n[CRANE ID=%d]Starting to operate\n",c->id);
             fflush(stdout);
 
-        for (int i=(c->id *5)+4; i>=(c->id *5); i--) {
-            if(docks->trainSharedDock.cont[i].id == -1 && findMatch(docks->trainSharedDock.trs[i/5].dest,&trs,&index,docks,c)==0){
+        for (int i=(c->id *5); i>(c->id *5)+5; i++) {
+            if(docks->trainSharedDock.cont[i].id == -1 && docks->trainSharedDock.trs[i/5].id != -1 && findMatch(docks->trainSharedDock.trs[i/5].dest,&trs,&index,docks,c)==0){
                 pickAndPlace(trs, index, 't', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 't');
                 fflush(stdout); 
@@ -153,7 +153,7 @@ void* craneFunc(Crane* c){
 
 
         for (int i=c->id*3; i<(c->id*3)+3; i++) {
-            if(docks->boatSharedDock.cont[i].id == -1 && findMatch(docks->boatSharedDock.trs[i/3].dest,&trs,&index,docks,c)==0){
+            if(docks->boatSharedDock.cont[i].id == -1 && docks->boatSharedDock.trs[i/3].id != -1 && findMatch(docks->boatSharedDock.trs[i/3].dest,&trs,&index,docks,c)==0){
                 pickAndPlace(trs, index, 'b', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 'b');
             }
@@ -162,7 +162,7 @@ void* craneFunc(Crane* c){
         
 
         for (int i=c->id*5; i<(c->id*5)+5; i++) {
-            if(docks->trucksSharedDock.cont[i].id == -1 && findMatch(docks->trucksSharedDock.trs[i].dest,&trs,&index,docks,c)==0){
+            if(docks->trucksSharedDock.cont[i].id == -1 && docks->trucksSharedDock.trs[i].id != -1 && findMatch(docks->trucksSharedDock.trs[i].dest,&trs,&index,docks,c)==0){
                 pickAndPlace(trs, index, 'T', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 'T');
             }
@@ -171,7 +171,7 @@ void* craneFunc(Crane* c){
         
       
   
-        if(c->id == 1){    
+        if(1){    
             if(checkTransport('T', 9, docks)==0){
                 pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
                 docks->trucksSharedDock.trs[9].dest = 0;
@@ -230,8 +230,6 @@ void* craneFunc(Crane* c){
         }
 
         printShmem(getShmid());
-        while(getchar()!='\n'); // option TWO to clean stdin
-        getchar();
         unlock(FULL);
         vehicleGone = 0;
 
@@ -242,10 +240,21 @@ void* craneFunc(Crane* c){
         pthread_mutex_unlock(&nextCraneMut);
 
     }
-    pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
-    pthread_kill(docks->trainSharedDock.trs[1].tid, SIGUSR1);
-    pthread_kill(docks->boatSharedDock.trs[0].tid, SIGUSR1);
-    pthread_kill(docks->boatSharedDock.trs[1].tid, SIGUSR1);
+
+    //kills all transport
+    if (cleaned==0){
+        pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGINT);
+        pthread_kill(docks->trainSharedDock.trs[1].tid, SIGUSR1);
+        pthread_kill(docks->boatSharedDock.trs[0].tid, SIGUSR1);
+        pthread_kill(docks->boatSharedDock.trs[1].tid, SIGUSR1);
+        sleep(2);
+        pthread_kill(c->genTransport, SIGINT);
+        cleaned = 1;
+    }
+
+    pthread_cond_signal(&nextCrane);
+    pthread_exit(0);
+
 
 
 }
