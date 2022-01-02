@@ -55,6 +55,13 @@ void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem){
 }
 
 int findMatch(char dest, char* trs, int* index, Docks* docks, Crane* c){
+    for(int i=c->id*5; i<(c->id*5)+5; i++){
+        if(docks->trucksSharedDock.cont[i].id != -1 && docks->trucksSharedDock.cont[i].dest == dest && docks->trucksSharedDock.trs[i].dest != dest){
+            *trs = 'T';
+            *index = i;
+            return 0;
+        }
+    }
     for(int i=c->id*3; i<(c->id*3)+3; i++){
         if(docks->boatSharedDock.cont[i].id != -1 && docks->boatSharedDock.cont[i].dest == dest && docks->boatSharedDock.trs[i/3].dest != dest){
             *trs = 'b';
@@ -69,13 +76,7 @@ int findMatch(char dest, char* trs, int* index, Docks* docks, Crane* c){
             return 0;
         }
     }
-    for(int i=c->id*5; i<(c->id*5)+5; i++){
-        if(docks->trucksSharedDock.cont[i].id != -1 && docks->trucksSharedDock.cont[i].dest == dest && docks->trucksSharedDock.trs[i].dest != dest){
-            *trs = 'T';
-            *index = i;
-            return 0;
-        }
-    }
+    
     
     
     return -1; 
@@ -140,10 +141,10 @@ void* craneFunc(Crane* c){
 
         lock(FULL);
 
-            printf("\n\n[CRANE ID=%d]Starting to operate\n",c->id);
-            fflush(stdout);
+        printf("\n\n[CRANE ID=%d]Starting to operate\n",c->id);
+        fflush(stdout);
 
-        for (int i=(c->id *5); i>(c->id *5)+5; i++) {
+        for (int i=(c->id *5); i<(c->id *5)+5; i++) {
             if(docks->trainSharedDock.cont[i].id == -1 && docks->trainSharedDock.trs[i/5].id != -1 && findMatch(docks->trainSharedDock.trs[i/5].dest,&trs,&index,docks,c)==0){
                 pickAndPlace(trs, index, 't', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 't');
@@ -221,9 +222,11 @@ void* craneFunc(Crane* c){
             }
             
 
-            if(vehicleGone){
+            if(vehicleGone==1){
                 //Warn the generator to generate a new transport of the same type as the one gone
                 pthread_kill(c->genTransport, SIGUSR1);
+            }else{
+                
             }
             
 
@@ -233,8 +236,8 @@ void* craneFunc(Crane* c){
         unlock(FULL);
         vehicleGone = 0;
 
+       
         pthread_cond_signal(&nextCrane);
-
         pthread_mutex_lock(&nextCraneMut);
         pthread_cond_wait(&nextCrane, &nextCraneMut);
         pthread_mutex_unlock(&nextCraneMut);
