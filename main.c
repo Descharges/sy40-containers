@@ -13,7 +13,6 @@
 
 #define NUMBER_OF_DESTINATION 3 //Simply change this to increase the number of destinations (max 26)
 int incrementingId = 0, incrementingContainerId = 0;
-bool endOfProcess;
 
 void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
@@ -59,7 +58,6 @@ int main(){
   }
       
   printf("[CONTROL] Shared memory allocated\n");
-  endOfProcess = false;
   genInitialTransport(docks);
   //genTransport
   pthread_t thread;
@@ -94,7 +92,6 @@ int main(){
 
   free(c1);
   free(c2);
-  endOfProcess = true;
 
   printf("Deleting shared memory and message queue\n");
   msgctl(getMsgid(), IPC_RMID, NULL);
