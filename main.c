@@ -19,6 +19,8 @@ void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
 
 extern int end;
+extern pthread_cond_t nextCrane;
+
 
 int main(){
   //create the shared memory struct
@@ -150,7 +152,6 @@ void genInitialTransport(Docks* docks){
 
 
   pthread_t thread[50];
-  int i = 0;
 
   char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
   //To know how much container per destination there is. Can also be NEGATIVE, in this case this is the number of free place on the vehicles
@@ -164,16 +165,9 @@ void genInitialTransport(Docks* docks){
   
   
   //We will generate on the docks half empty and half filled vehicles
-  int totalNumberOfPlacesOnDocks = NB_CONTAINER_TRUCK + NB_CONTAINER_TRAIN + NB_CONTAINER_BOAT;
   int currentDockPlacesTaken = 0;
-  int randomPercentage = 0;
   int randomDestinationNo = 0;
   
-  //Probability which work perfectly with 5 cont for train, 3 for boat and 1 for truck
-  double trainProbability = 100*3/23;
-  double truckProbability = 100*15/23;
-  double boatProbability = 100*5/23;
-
   int nbOfContainerPerTruck = NB_CONTAINER_TRUCK/NB_OF_TRUCKS;
   int nbOfContainerPerTrain = NB_CONTAINER_TRAIN/NB_OF_TRAINS;
   int nbOfContainerPerBoat = NB_CONTAINER_BOAT/NB_OF_BOATS;
@@ -368,6 +362,7 @@ void genTransport(){
   if (end==1) {
     //free ici
     pthread_exit(0);
+    pthread_cond_signal(&nextCrane);
   }
 
 
@@ -386,17 +381,16 @@ void genTransport(){
   
   if(msgctl(getMsgid(), IPC_STAT, &buf) == -1){
     perror("msgctl error while getting number of messages.");
-    exit(1);
   }
     
   numMsg = buf.msg_qnum;
 
   if ((msgrcv(getMsgid(), &infoAnswer, sizeof(trsDest), 1, 0)) == -1) {
     perror("Erreur de lecture requete P2\n");
-    exit(1);
   }
 
   printf("[GENERATOR]Generate new '%c'\n", infoAnswer.vehicleType);
+  fflush(stdout);
 
 
   type = infoAnswer.vehicleType;
@@ -526,9 +520,8 @@ void genTransport(){
         perror("Erreur Creation thread");
       incrementingId++;
 
-  //}
-    }
-    
+  
+    }    
   }
  }
 }
