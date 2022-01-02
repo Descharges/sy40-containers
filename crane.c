@@ -54,9 +54,9 @@ void pickAndPlace(char trs1, int x1, char trs2, int x2, Docks* shmem){
 }
 
 int findMatch(char dest, char* trs, int* index, Docks* docks, Crane* c){
-    for(int i=c->id*5; i<(c->id*5)+5; i++){
-        if(docks->trucksSharedDock.cont[i].id != -1 && docks->trucksSharedDock.cont[i].dest == dest && docks->trucksSharedDock.trs[i].dest != dest){
-            *trs = 'T';
+    for(int i=c->id*3; i<(c->id*3)+3; i++){
+        if(docks->boatSharedDock.cont[i].id != -1 && docks->boatSharedDock.cont[i].dest == dest && docks->boatSharedDock.trs[i/3].dest != dest){
+            *trs = 'b';
             *index = i;
             return 0;
         }
@@ -68,13 +68,15 @@ int findMatch(char dest, char* trs, int* index, Docks* docks, Crane* c){
             return 0;
         }
     }
-    for(int i=c->id*3; i<(c->id*3)+3; i++){
-        if(docks->boatSharedDock.cont[i].id != -1 && docks->boatSharedDock.cont[i].dest == dest && docks->boatSharedDock.trs[i/3].dest != dest){
-            *trs = 'b';
+    for(int i=c->id*5; i<(c->id*5)+5; i++){
+        if(docks->trucksSharedDock.cont[i].id != -1 && docks->trucksSharedDock.cont[i].dest == dest && docks->trucksSharedDock.trs[i].dest != dest){
+            *trs = 'T';
             *index = i;
             return 0;
         }
     }
+    
+    
     return -1; 
 }
 
@@ -137,15 +139,15 @@ void* craneFunc(Crane* c){
 
         lock(FULL);
 
-            printf("\e[1;1H\e[2J");
+            //printf("\e[1;1H\e[2J");
             printf("[CRANE ID=%d]Starting to operate",c->id);
             fflush(stdout);
-            printShmem(getShmid());
 
         for (int i=(c->id *5)+4; i>=(c->id *5); i--) {
             if(docks->trainSharedDock.cont[i].id == -1 && findMatch(docks->trainSharedDock.trs[i/5].dest,&trs,&index,docks,c)==0){
                 pickAndPlace(trs, index, 't', i, docks);
                 printf("[CRANE] Took container [i=%d,trs=%c] to [i=%d, trs=%c]\n",index,trs, i, 't');
+                fflush(stdout); 
             }
         }
 
@@ -226,6 +228,10 @@ void* craneFunc(Crane* c){
             
 
         }
+
+        printShmem(getShmid());
+        while(getchar()!='\n'); // option TWO to clean stdin
+        getchar();
         unlock(FULL);
         vehicleGone = 0;
 

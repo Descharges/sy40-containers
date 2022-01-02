@@ -281,11 +281,9 @@ void train(transport *t){
     t->pos = 1-nTrains;
   }
   nTrains++;
-  if(t->contArray->id != -1){
-     printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d to %c\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id, t->contArray[0].dest);
-  }else{
-    printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
-  }
+
+  printf("[TRAIN %d to %c]Entering the docks at pos %d with %d,%d,%d,%d,%d\n", t->id, t->dest, t->pos, t->contArray[0].id, t->contArray[1].id, t->contArray[2].id, t->contArray[3].id, t->contArray[4].id);
+  fflush(stdout);  
  
   
   

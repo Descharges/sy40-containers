@@ -11,7 +11,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-#define NUMBER_OF_DESTINATION 4 //Simply change this to increase the number of destinations (max 26)
+#define NUMBER_OF_DESTINATION 3 //Simply change this to increase the number of destinations (max 26)
 int incrementingId = 0, incrementingContainerId = 0;
 
 
@@ -26,19 +26,37 @@ int main(){
   msgQInit();
   Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
   
-  for(int i = 0 ; i<NB_OF_TRUCKS ; i++)
-      docks->trucksSharedDock.trs[i].id = -1;
-  for(int i = 0 ; i<NB_OF_TRAINS ; i++)
+  for(int i = 0 ; i<NB_OF_TRUCKS ; i++){
+    docks->trucksSharedDock.trs[i].id = -1;
+    docks->trucksSharedDock.trs[i].dest = 0;
+  }
+      
+  for(int i = 0 ; i<NB_OF_TRAINS ; i++){
     docks->trainSharedDock.trs[i].id = -1;
-  for(int i = 0 ; i<NB_OF_BOATS ; i++)
-      docks->boatSharedDock.trs[i].id = -1;
+    docks->trainSharedDock.trs[i].dest = 0;
+  }
+    
+  for(int i = 0 ; i<NB_OF_BOATS ; i++){
+    docks->boatSharedDock.trs[i].id = -1;
+    docks->boatSharedDock.trs[i].dest = 0;
+  }
+      
   
-  for(int i = 0 ; i<10 ; i++)
-      docks->trucksSharedDock.cont[i].id = -1;
-  for(int i = 0 ; i<10 ; i++)
+  for(int i = 0 ; i<10 ; i++){
+    docks->trucksSharedDock.cont[i].id = -1;
+    docks->trucksSharedDock.cont[i].dest = 0;
+  }
+      
+  for(int i = 0 ; i<10 ; i++){
     docks->trainSharedDock.cont[i].id = -1;
-  for(int i = 0 ; i<6; i++)
-      docks->boatSharedDock.cont[i].id = -1;
+    docks->trainSharedDock.cont[i].dest = 0;
+  } 
+    
+  for(int i = 0 ; i<6; i++){
+    docks->boatSharedDock.cont[i].id = -1;
+    docks->boatSharedDock.cont[i].dest = 0;
+  }
+      
   
   printf("[CONTROL] Shared memory allocated\n");
 
@@ -205,7 +223,7 @@ void genInitialTransport(Docks* docks){
       container *emptyBoatContArray = malloc(sizeof(container)*3);
       for(int i = 0 ; i<3 ; i++){
         emptyBoatContArray[i].id = -1;
-        emptyBoatContArray[i].dest = -1;
+        emptyBoatContArray[i].dest = 0;
       }
 
       transportToGenerate->contArray = emptyBoatContArray;
@@ -220,7 +238,7 @@ void genInitialTransport(Docks* docks){
       container *emptyTrainContArray = malloc(sizeof(container)*5);
       for(int i = 0 ; i<5 ; i++){
         emptyTrainContArray[i].id = -1;
-        emptyTrainContArray[i].dest = -1;
+        emptyTrainContArray[i].dest = 0;
       }
       transportToGenerate->contArray = emptyTrainContArray;
       nbOfVehiclesGenerated[1]++;
@@ -304,7 +322,6 @@ void genInitialTransport(Docks* docks){
   }
   
   sleep(1);
-  printShmem(getShmid());
 
 
 }
@@ -456,6 +473,7 @@ void genTransport(){
           //If there is no need of container on docks
           if(inequality == NULL){
           //Generate free places
+          filledBoatContArray[j].id = -1;
           filledBoatContArray[j].dest = -1; 
           }else{
             //Generate containers
@@ -472,7 +490,8 @@ void genTransport(){
         incrementingContainerId++;
         if(inequality == NULL){
           //Generate free places
-          filledTruckContArray[0].dest = -1; 
+          filledTruckContArray[0].id = -1;
+          filledTruckContArray[0].dest = 0;  
           }else{
             //Generate containers
             filledTruckContArray[0].dest = destinations[inequality[1]];
@@ -491,7 +510,8 @@ void genTransport(){
 
           if(inequality == NULL){
           //Generate free places
-          filledTrainContArray[j].dest = -1;
+          filledTrainContArray[j].id = -1;
+          filledTrainContArray[j].dest = 0;
           }else{
             //Generate containers
             filledTrainContArray[j].dest = destinations[inequality[1]];
