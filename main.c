@@ -14,8 +14,6 @@
 #define NUMBER_OF_DESTINATION 3 //Simply change this to increase the number of destinations (max 26)
 int incrementingId = 0, incrementingContainerId = 0;
 
-
-
 void genCrane();//generate the crane (portique)
 void genTransport();//generate the transports
 void genTerrain(); //Not sur if usefull but might come handy
@@ -27,7 +25,7 @@ int main(){
   shmemInit();
   msgQInit();
   Docks* docks = (Docks *)shmat(getShmid(), NULL, 0);
-  
+        
   for(int i = 0 ; i<NB_OF_TRUCKS ; i++){
     docks->trucksSharedDock.trs[i].id = -1;
     docks->trucksSharedDock.trs[i].dest = 0;
@@ -42,8 +40,8 @@ int main(){
     docks->boatSharedDock.trs[i].id = -1;
     docks->boatSharedDock.trs[i].dest = 0;
   }
-      
-  
+     
+
   for(int i = 0 ; i<10 ; i++){
     docks->trucksSharedDock.cont[i].id = -1;
     docks->trucksSharedDock.cont[i].dest = 0;
@@ -59,9 +57,7 @@ int main(){
     docks->boatSharedDock.cont[i].dest = 0;
   }
       
-  
   printf("[CONTROL] Shared memory allocated\n");
-
   genInitialTransport(docks);
   //genTransport
   pthread_t thread;
@@ -97,9 +93,7 @@ int main(){
   free(c1);
   free(c2);
 
-
-
-
+  printf("Deleting shared memory and message queue\n");
   msgctl(getMsgid(), IPC_RMID, NULL);
   shmctl(getShmid(), IPC_RMID, NULL);
 
@@ -226,7 +220,7 @@ void genInitialTransport(Docks* docks){
       nbOfVehiclesGenerated[2]++;
       currentDockPlacesTaken+=nbOfContainerPerBoat;
       containerDispositions[randomDestinationNo]-=nbOfContainerPerBoat;
-   
+
     }else{
      //Train
 
@@ -240,11 +234,9 @@ void genInitialTransport(Docks* docks){
       nbOfVehiclesGenerated[1]++;
       currentDockPlacesTaken+=nbOfContainerPerTrain;
       containerDispositions[randomDestinationNo]-=nbOfContainerPerTrain;
- 
     }
     
    if (pthread_create(thread+i, &thread_attr,(void *) transportFunc, transportToGenerate) != 0)
-
       perror("Erreur Creation thread");
     incrementingId++;
     
@@ -252,9 +244,10 @@ void genInitialTransport(Docks* docks){
   }
   
   
-  sleep(1);
+  sleep(1);//Sleep for user convenience
   int *inequality = malloc(2*sizeof(int));
-  
+  int *copyOfInequality = inequality;
+
 
 
   //===We count the inequalities(is there more container of free places?) on dock and generate filled vehicles accordingly 
@@ -294,7 +287,6 @@ void genInitialTransport(Docks* docks){
       nbOfVehiclesGenerated[2]++;
       currentDockPlacesTaken+=nbOfContainerPerBoat;
       containerDispositions[inequality[1]]+=nbOfContainerPerBoat;
-   
     }else{
       //Truck
       transportToGenerate->type = 'T';
@@ -314,10 +306,10 @@ void genInitialTransport(Docks* docks){
     if (pthread_create(thread+i, &thread_attr,(void *) transportFunc, transportToGenerate) != 0)
       perror("Erreur Creation thread");
     incrementingId++;
-
+    
   }
-  
-  sleep(1);
+  free(copyOfInequality);
+  sleep(1);//sleep for user convenience
 
 
 }
@@ -333,10 +325,9 @@ void genTransport(){
   intSigaction.sa_flags = 0;
   sigaction(SIGINT, &intSigaction, NULL);
   
-  sleep(2);
+  sleep(2);//So that we can have a clean display of the first generation
   char destinations[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R','S','T','U','V','W','X','Y','Z'};
-  //TO DO : malloc the pthread_t
-  pthread_t thread[50];
+  pthread_t thread[100];
 
   //For detached threads
   pthread_attr_t thread_attr;

@@ -170,7 +170,7 @@ void* craneFunc(Crane* c){
         
         
       
-  
+      
         if(1){    
             if(checkTransport('T', 9, docks)==0){
                 pthread_kill(docks->trucksSharedDock.trs[9].tid, SIGUSR1);
